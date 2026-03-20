@@ -683,6 +683,18 @@ export default function Home() {
 
           {/* Contextual alerts - minimal */}
           <div className="flex items-center gap-3">
+            {/* Meeting prep pill - shows when meeting is soon */}
+            {imminentMeeting && (
+              <button
+                onClick={handleOpenMeetingPrep}
+                className="flex items-center gap-2 px-2 py-1 bg-white/5 rounded-md hover:bg-white/10 transition-colors"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="text-xs text-white/60">{imminentMeeting.item.title}</span>
+                <span className="text-[10px] text-white/40 font-mono">{imminentMeeting.minsUntil}m</span>
+              </button>
+            )}
+
             {/* Waiting on me indicator */}
             {waitingOnMeCount > 0 && (
               <button
@@ -692,17 +704,6 @@ export default function Home() {
               >
                 <Zap size={10} />
                 {waitingOnMeCount}
-              </button>
-            )}
-            
-            {/* Meeting soon indicator */}
-            {upcomingMeetings.length > 0 && upcomingMeetings[0].minsUntil <= 60 && (
-              <button
-                onClick={handleOpenMeetingPrep}
-                className="flex items-center gap-1 text-green-400/80 text-xs font-mono hover:text-green-400 transition-colors"
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                {upcomingMeetings[0].minsUntil}m
               </button>
             )}
             
@@ -942,19 +943,7 @@ export default function Home() {
         onItemClick={handleItemClick}
       />
 
-      {/* Meeting Prep Banner - shows when meeting is imminent */}
-      <AnimatePresence>
-        {imminentMeeting && imminentMeeting.minsUntil <= 15 && !meetingPrepOpen && (
-          <MeetingPrepBanner
-            meeting={{
-              title: imminentMeeting.item.title,
-              attendees: imminentMeeting.attendees,
-            }}
-            minsUntil={imminentMeeting.minsUntil}
-            onView={handleOpenMeetingPrep}
-          />
-        )}
-      </AnimatePresence>
+      {/* Meeting prep is now in the header toolbar */}
 
       {/* Alert Bar disabled - too visually loud */}
       {/* <AlertBar

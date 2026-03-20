@@ -958,12 +958,12 @@ export default function Home() {
         )}
       </AnimatePresence>
 
-      {/* Alert Bar - shows at bottom for urgent items */}
-      <AlertBar
+      {/* Alert Bar disabled - too visually loud */}
+      {/* <AlertBar
         alerts={urgentAlerts.filter(a => !dismissedAlerts.has(a.id))}
         onDismiss={handleAlertDismiss}
         onNavigate={handleAlertNavigate}
-      />
+      /> */}
 
     </main>
   );

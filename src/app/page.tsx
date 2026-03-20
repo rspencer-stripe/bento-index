@@ -137,7 +137,7 @@ function getItemThumbnail(item: MindItem): string | null {
 
 const STORAGE_KEY = 'index-items';
 const STORAGE_VERSION_KEY = 'index-version';
-const CURRENT_VERSION = '16'; // Richer Katie 1:1 meeting prep context
+const CURRENT_VERSION = '18'; // Exclude mock calendar events to show Katie 1:1
 
 const validViewModes: ViewMode[] = ['timeline', 'focus', 'meetings', 'projects', 'digest', 'commitments'];
 
@@ -193,8 +193,9 @@ export default function Home() {
           localStorage.removeItem(STORAGE_KEY);
           localStorage.setItem(STORAGE_VERSION_KEY, CURRENT_VERSION);
         }
+        // Demo mode: use liveItems + mockItems (excluding mock calendar events to keep Katie 1:1)
         const combinedData = [...liveItems, ...mockItems.filter(m => 
-          !liveItems.some(l => l.title === m.title)
+          m.source !== 'calendar' && !liveItems.some(l => l.title === m.title)
         )];
         setItems(combinedData);
         setIsLoaded(true);
@@ -208,7 +209,7 @@ export default function Home() {
           } else {
             // Fallback to demo data if no live data available
             const combinedData = [...liveItems, ...mockItems.filter(m => 
-              !liveItems.some(l => l.title === m.title)
+              m.source !== 'calendar' && !liveItems.some(l => l.title === m.title)
             )];
             setItems(combinedData);
           }
@@ -216,7 +217,7 @@ export default function Home() {
           console.error('Failed to load live data:', error);
           // Fallback to demo data
           const combinedData = [...liveItems, ...mockItems.filter(m => 
-            !liveItems.some(l => l.title === m.title)
+            m.source !== 'calendar' && !liveItems.some(l => l.title === m.title)
           )];
           setItems(combinedData);
         }

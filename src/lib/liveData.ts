@@ -1,67 +1,448 @@
 import { MindItem } from './types';
 
-// Transform real MCP data into MindItems
-// This data was fetched from live MCP sources on March 20, 2026
+// Demo data designed to showcase all 10 Essential Journeys
+// Times are relative to "now" so the demo always works
 
-const now = new Date();
-const todayAt = (hour: number, min: number = 0) => {
-  const d = new Date();
-  d.setHours(hour, min, 0, 0);
-  return d.toISOString();
+// Helper functions for relative times
+const now = () => new Date();
+const minsFromNow = (mins: number) => new Date(now().getTime() + mins * 60 * 1000).toISOString();
+const hoursFromNow = (hours: number) => new Date(now().getTime() + hours * 60 * 60 * 1000).toISOString();
+const daysFromNow = (days: number) => new Date(now().getTime() + days * 24 * 60 * 60 * 1000).toISOString();
+const minsAgo = (mins: number) => new Date(now().getTime() - mins * 60 * 1000).toISOString();
+const hoursAgo = (hours: number) => new Date(now().getTime() - hours * 60 * 60 * 1000).toISOString();
+const daysAgo = (days: number) => new Date(now().getTime() - days * 24 * 60 * 60 * 1000).toISOString();
+
+// ═══════════════════════════════════════════════════════════════════════════
+// JOURNEY 1: 5-Minute Meeting Prep
+// Need: A meeting starting in ~12 minutes with attendees and related context
+// ═══════════════════════════════════════════════════════════════════════════
+
+const imminentMeeting: MindItem = {
+  id: 'cal-imminent-katie-1on1',
+  tag: '#Radar',
+  type: 'event',
+  priority: 4,
+  title: 'Ryan / Katie',
+  snippet: '1:1 sync - discuss Radar overview progress and SKU refresh timeline',
+  source: 'calendar',
+  sourceMeta: {
+    source: 'calendar',
+    meta: {
+      eventType: 'oneOnOne',
+      startsAt: minsFromNow(12),
+      endsAt: minsFromNow(42),
+      tetheredArtifacts: ['https://docs.google.com/document/d/1q-wZhopMpi0aqNJV1RSqjnfGNUKivplIZYjv5iaRvNo'],
+      attendees: [
+        { name: 'katiek@stripe.com' },
+      ],
+      zoomLink: 'https://stripe.zoom.us/j/95949759347',
+    },
+  },
+  createdAt: daysAgo(30),
+  lastTouchedAt: hoursAgo(1),
 };
 
-// Calendar events from Google Calendar MCP
-const calendarItems: MindItem[] = [
+// Related context for the imminent meeting
+const katieSlackThread: MindItem = {
+  id: 'slack-katie-radar-question',
+  tag: '#Radar',
+  type: 'note',
+  priority: 4,
+  title: 'Radar SKU timeline question',
+  snippet: 'Katie: "Can you send me the updated timeline for the SKU refresh? Need to sync with product on Monday."',
+  source: 'slack',
+  sourceMeta: {
+    source: 'slack',
+    meta: {
+      coreAsk: 'Timeline for SKU refresh needed',
+      collaborator: { name: 'katiek' },
+      threadUrl: 'https://stripe.slack.com/archives/D05SUBXP78F/p1773976956519509',
+      channel: 'DM with Katie',
+    },
+  },
+  createdAt: daysAgo(2),
+  lastTouchedAt: daysAgo(1),
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// JOURNEY 3: Morning Scan - Items with WAITING badges
+// Need: Items where someone is waiting on you
+// ═══════════════════════════════════════════════════════════════════════════
+
+const waitingItems: MindItem[] = [
   {
-    id: 'cal-ai-day-jam',
-    tag: '#Design',
-    type: 'event',
+    id: 'slack-waiting-review',
+    tag: '#Radar',
+    type: 'note',
     priority: 5,
-    title: 'AI Day Jam',
-    snippet: 'Booking a room in the morning for people in Oyster Point to hang out and design with AI together.',
-    source: 'calendar',
+    title: 'Design review request from Jacob',
+    snippet: 'Hey Ryan, waiting on your review of the Radar Overview mocks. Can you take a look when you get a chance? Need your thoughts before the eng sync.',
+    source: 'slack',
     sourceMeta: {
-      source: 'calendar',
+      source: 'slack',
       meta: {
-        eventType: 'focus',
-        startsAt: todayAt(8, 30),
-        endsAt: todayAt(12, 0),
-        tetheredArtifacts: [],
-        attendees: [
-          { name: 'jeffreyg@stripe.com' },
-          { name: 'mcao@stripe.com' },
-          { name: 'katb@stripe.com' },
-        ],
-        location: 'SSF-B1-3-24-Internet',
+        coreAsk: 'Review Radar Overview mocks',
+        collaborator: { name: 'jacobmeltzer' },
+        threadUrl: 'https://stripe.slack.com/archives/C0A1GU3K9KM/p1773952660621959',
+        channel: '#radar-design',
       },
     },
-    createdAt: todayAt(0, 0),
-    lastTouchedAt: todayAt(8, 0),
+    createdAt: hoursAgo(4),
+    lastTouchedAt: hoursAgo(4),
   },
   {
-    id: 'cal-friday-fireside',
-    tag: '#Company',
-    type: 'event',
+    id: 'slack-waiting-decision',
+    tag: '#Disputes',
+    type: 'note',
+    priority: 4,
+    title: 'Auto-submit behavior decision',
+    snippet: 'Let me know your thoughts on the auto-submit UX. Waiting on you to make the call on whether we show the preview or not.',
+    source: 'slack',
+    sourceMeta: {
+      source: 'slack',
+      meta: {
+        coreAsk: 'Decision needed on auto-submit UX',
+        collaborator: { name: 'shayperez' },
+        threadUrl: 'https://stripe.slack.com/archives/C08QZC57TD4/p1773956055380819',
+        channel: '#radar-disputes',
+      },
+    },
+    createdAt: hoursAgo(6),
+    lastTouchedAt: hoursAgo(6),
+  },
+  {
+    id: 'slack-please-review',
+    tag: '#RiskPlatform',
+    type: 'note',
+    priority: 4,
+    title: 'Risk Platform spec for your review',
+    snippet: 'Please review the attached spec when you can. Anne Catherine and I are blocked until we get your feedback on the IA changes.',
+    source: 'slack',
+    sourceMeta: {
+      source: 'slack',
+      meta: {
+        coreAsk: 'Spec review blocking team',
+        collaborator: { name: 'sadhika' },
+        threadUrl: 'https://stripe.slack.com/archives/C09RUL37EN7/p1773942724595549',
+        channel: '#risk-platform-design',
+      },
+    },
+    createdAt: daysAgo(1),
+    lastTouchedAt: daysAgo(1),
+  },
+];
+
+// ═══════════════════════════════════════════════════════════════════════════
+// JOURNEY 4: Commitment Catch
+// Need: Items with "I'll..." language that are 4+ days old
+// ═══════════════════════════════════════════════════════════════════════════
+
+const commitmentItems: MindItem[] = [
+  {
+    id: 'slack-commitment-timeline',
+    tag: '#Radar',
+    type: 'note',
+    priority: 4,
+    title: 'Commitment: Send SKU timeline',
+    snippet: "I'll send over the updated SKU timeline by end of week. Let me put together a quick summary of where we're at.",
+    source: 'slack',
+    sourceMeta: {
+      source: 'slack',
+      meta: {
+        coreAsk: 'Promised to send SKU timeline',
+        collaborator: { name: 'katiek' },
+        threadUrl: 'https://stripe.slack.com/archives/D05SUBXP78F/p1773976956519510',
+        channel: 'DM with Katie',
+      },
+    },
+    createdAt: daysAgo(5),
+    lastTouchedAt: daysAgo(5),
+  },
+  {
+    id: 'slack-commitment-prototype',
+    tag: '#Radar',
+    type: 'note',
     priority: 3,
-    title: 'Friday Fireside',
-    snippet: 'Stripe-wide Friday Fireside event',
-    source: 'calendar',
+    title: 'Commitment: Share prototype link',
+    snippet: "Let me share the prototype link with you tomorrow. I'll make sure it's ready for the review.",
+    source: 'slack',
     sourceMeta: {
-      source: 'calendar',
+      source: 'slack',
       meta: {
-        eventType: 'external',
-        startsAt: todayAt(9, 0),
-        endsAt: todayAt(10, 0),
-        tetheredArtifacts: ['https://go/stripetv/live'],
-        attendees: [],
-        zoomLink: 'https://stripe.zoom.us/j/92764267390',
+        coreAsk: 'Promised to share prototype',
+        collaborator: { name: 'winfield' },
+        threadUrl: 'https://stripe.slack.com/archives/C0A1GU3K9KM/p1773952660621960',
+        channel: '#radar-design',
       },
     },
-    createdAt: todayAt(0, 0),
-    lastTouchedAt: todayAt(8, 0),
+    createdAt: daysAgo(4),
+    lastTouchedAt: daysAgo(4),
   },
   {
-    id: 'cal-radar-plus-weekly',
+    id: 'slack-commitment-feedback',
+    tag: '#PayIntel',
+    type: 'note',
+    priority: 3,
+    title: 'Commitment: Compile feedback',
+    snippet: "I can put together a summary of the user feedback we've collected. Will do that this week.",
+    source: 'slack',
+    sourceMeta: {
+      source: 'slack',
+      meta: {
+        coreAsk: 'Promised to compile user feedback',
+        collaborator: { name: 'jackerman' },
+        threadUrl: 'https://stripe.slack.com/archives/C0A1GU3K9KM/p1773952660621961',
+        channel: '#payintel',
+      },
+    },
+    createdAt: daysAgo(6),
+    lastTouchedAt: daysAgo(6),
+  },
+];
+
+// ═══════════════════════════════════════════════════════════════════════════
+// JOURNEY 9: Stale Item Nudge
+// Need: P5 items untouched for 5+ days
+// ═══════════════════════════════════════════════════════════════════════════
+
+const staleItems: MindItem[] = [
+  {
+    id: 'drive-stale-vision-doc',
+    tag: '#Radar',
+    type: 'artifact',
+    priority: 5,
+    title: 'Radar 2026 Vision Document',
+    snippet: 'Vision document needs final review before sharing with leadership. Draft complete but not reviewed.',
+    source: 'drive',
+    sourceMeta: {
+      source: 'drive',
+      meta: {
+        docTitle: 'Radar 2026 Vision Document',
+        executiveSummary: 'Strategic vision for Radar product line',
+        lastEditors: [{ name: 'Ryan Spencer', editedAt: daysAgo(7) }],
+        webUrl: 'https://docs.google.com/document/d/1yP0ZjpUWipGCHub0e9MFRdxHnh1NOFLoHNs9t6Qaxbs/edit',
+      },
+    },
+    createdAt: daysAgo(14),
+    lastTouchedAt: daysAgo(7),
+  },
+  {
+    id: 'slack-stale-decision',
+    tag: '#Disputes',
+    type: 'note',
+    priority: 5,
+    title: 'Disputes IA decision pending',
+    snippet: 'We need to decide on the information architecture for the new disputes dashboard. This is blocking the eng team.',
+    source: 'slack',
+    sourceMeta: {
+      source: 'slack',
+      meta: {
+        coreAsk: 'IA decision for disputes dashboard',
+        collaborator: { name: 'jesstam' },
+        threadUrl: 'https://stripe.slack.com/archives/C08QZC57TD4/p1773956055380820',
+        channel: '#radar-disputes',
+      },
+    },
+    createdAt: daysAgo(6),
+    lastTouchedAt: daysAgo(5),
+  },
+];
+
+// ═══════════════════════════════════════════════════════════════════════════
+// JOURNEY 2 & 10: Timeline context (past and future items)
+// Need: Items spread across yesterday, today, tomorrow
+// ═══════════════════════════════════════════════════════════════════════════
+
+const timelineItems: MindItem[] = [
+  // Recent items (today)
+  {
+    id: 'slack-console-ai-review',
+    tag: '#AI',
+    type: 'note',
+    priority: 5,
+    title: 'Console AI Experience Review',
+    snippet: "Have you explored Console yet? We need to find a better way to integrate with it. Asked \"what's my fraud rate\" and it didn't know how to calculate.",
+    source: 'slack',
+    sourceMeta: {
+      source: 'slack',
+      meta: {
+        coreAsk: 'Reviewing Console AI experience',
+        collaborator: { name: 'annecath' },
+        threadUrl: 'https://stripe.slack.com/archives/D05SUBXP78F/p1773976956519509',
+        channel: 'DM',
+      },
+    },
+    createdAt: hoursAgo(2),
+    lastTouchedAt: hoursAgo(2),
+  },
+  {
+    id: 'drive-radar-planning-notes',
+    tag: '#Radar',
+    type: 'artifact',
+    priority: 5,
+    title: 'Notes - Radar Design: Planning & Sync',
+    snippet: 'Planning and sync notes for Radar design team - updated this morning',
+    source: 'drive',
+    sourceMeta: {
+      source: 'drive',
+      meta: {
+        docTitle: 'Notes - Radar Design: Planning & Sync',
+        executiveSummary: 'Weekly planning notes',
+        lastEditors: [{ name: 'Ryan Spencer', editedAt: hoursAgo(3) }],
+        webUrl: 'https://docs.google.com/document/d/1qKmbHpjI8CGx4j9TNHRCJFttT5PYX-oZVv2Xa1PNoLs/edit',
+      },
+    },
+    createdAt: daysAgo(30),
+    lastTouchedAt: hoursAgo(3),
+  },
+  // Yesterday items
+  {
+    id: 'slack-disputes-research',
+    tag: '#Disputes',
+    type: 'note',
+    priority: 4,
+    title: 'Smart Disputes Desk Research',
+    snippet: 'TL;DR: Stripe\'s automation seen as "Safety Net" vs "Black Box". Expected for SaaS but skepticism for physical shipping.',
+    source: 'slack',
+    sourceMeta: {
+      source: 'slack',
+      meta: {
+        coreAsk: 'Customer sentiment on auto-submit',
+        collaborator: { name: 'katiek, jesstam' },
+        threadUrl: 'https://stripe.slack.com/archives/C08QZC57TD4/p1773956055380819',
+        channel: '#radar-disputes',
+      },
+    },
+    createdAt: daysAgo(1),
+    lastTouchedAt: daysAgo(1),
+  },
+  {
+    id: 'drive-prototype-analysis',
+    tag: '#Radar',
+    type: 'artifact',
+    priority: 4,
+    title: 'Radar overview prototype analysis',
+    snippet: 'Analysis of prototype explorations from user testing sessions',
+    source: 'drive',
+    sourceMeta: {
+      source: 'drive',
+      meta: {
+        docTitle: 'Radar overview prototype analysis',
+        executiveSummary: 'User testing findings',
+        lastEditors: [{ name: 'Ryan Spencer', editedAt: daysAgo(1) }],
+        webUrl: 'https://docs.google.com/document/d/1jvWFjLtp7ohi8vn-jptgKqu307L0SaAiMu_sJWgz1z0/edit',
+      },
+    },
+    createdAt: daysAgo(3),
+    lastTouchedAt: daysAgo(1),
+  },
+];
+
+// ═══════════════════════════════════════════════════════════════════════════
+// JOURNEY 6: Project Pulse Check
+// Need: Multiple projects with varying health states
+// ═══════════════════════════════════════════════════════════════════════════
+
+const projectItems: MindItem[] = [
+  // Active project with momentum
+  {
+    id: 'figma-radar-overview',
+    tag: '#Radar',
+    type: 'artifact',
+    priority: 4,
+    title: 'Radar Overview - v3 explorations',
+    snippet: 'Latest iteration on the overview dashboard with performance metrics',
+    source: 'figma',
+    sourceMeta: {
+      source: 'figma',
+      meta: {
+        fileName: 'Radar Overview - v3 explorations',
+        lastModified: hoursAgo(1),
+        desktopUrl: 'figma://file/abc123',
+      },
+    },
+    createdAt: daysAgo(7),
+    lastTouchedAt: hoursAgo(1),
+  },
+  // Stale project
+  {
+    id: 'slack-terminal-design',
+    tag: '#Terminal',
+    type: 'note',
+    priority: 3,
+    title: 'Terminal reader UX feedback',
+    snippet: 'Some thoughts on the reader configuration flow that came up in testing.',
+    source: 'slack',
+    sourceMeta: {
+      source: 'slack',
+      meta: {
+        coreAsk: 'Reader UX feedback',
+        collaborator: { name: 'perry' },
+        threadUrl: 'https://stripe.slack.com/archives/terminal/p123',
+        channel: '#terminal-design',
+      },
+    },
+    createdAt: daysAgo(12),
+    lastTouchedAt: daysAgo(10),
+  },
+];
+
+// ═══════════════════════════════════════════════════════════════════════════
+// JOURNEY 8: End-of-Day Digest
+// Need: Mix of items touched today
+// ═══════════════════════════════════════════════════════════════════════════
+
+const todayItems: MindItem[] = [
+  {
+    id: 'slack-design-ai',
+    tag: '#DesigningAI',
+    type: 'note',
+    priority: 3,
+    title: 'AI Design: Recruiting + Fictional Data',
+    snippet: 'The process of recruiting users → generating fictional data to make the product feel real is such a great unlock!',
+    source: 'slack',
+    sourceMeta: {
+      source: 'slack',
+      meta: {
+        coreAsk: 'AI-first design methodologies',
+        collaborator: { name: '#designing-ai' },
+        threadUrl: 'https://stripe.slack.com/archives/C08P4284UTV/p1773957167506239',
+        channel: '#designing-ai',
+      },
+    },
+    createdAt: hoursAgo(5),
+    lastTouchedAt: hoursAgo(5),
+  },
+  {
+    id: 'drive-payintel-tracker',
+    tag: '#PayIntel',
+    type: 'artifact',
+    priority: 4,
+    title: 'Payment intelligence design tracker',
+    snippet: 'go/payintel-design-tracker - Updated project status this morning',
+    source: 'drive',
+    sourceMeta: {
+      source: 'drive',
+      meta: {
+        docTitle: 'Payment intelligence design tracker',
+        executiveSummary: 'Design project tracker',
+        lastEditors: [{ name: 'Ryan Spencer', editedAt: hoursAgo(4) }],
+        webUrl: 'https://docs.google.com/spreadsheets/d/1gN_F70CgKP8WYHK_EGyJVgfHChPGkHLkObppLwVQOK8/edit',
+      },
+    },
+    createdAt: daysAgo(180),
+    lastTouchedAt: hoursAgo(4),
+  },
+];
+
+// ═══════════════════════════════════════════════════════════════════════════
+// UPCOMING MEETINGS (for meeting companion & timeline)
+// ═══════════════════════════════════════════════════════════════════════════
+
+const upcomingMeetings: MindItem[] = [
+  imminentMeeting,
+  {
+    id: 'cal-radar-weekly',
     tag: '#Radar',
     type: 'event',
     priority: 4,
@@ -72,176 +453,50 @@ const calendarItems: MindItem[] = [
       source: 'calendar',
       meta: {
         eventType: 'standup',
-        startsAt: todayAt(11, 30),
-        endsAt: todayAt(12, 0),
-        tetheredArtifacts: ['https://docs.google.com/document/d/1RTKIp_q7MjhB5OC99LrzCLMz8evthlV3-gCI_B1jOeY/edit'],
+        startsAt: hoursFromNow(2),
+        endsAt: hoursFromNow(2.5),
+        tetheredArtifacts: [],
         attendees: [
-          { name: 'tpianta@stripe.com' },
-          { name: 'yuhsin@stripe.com' },
           { name: 'jacobmeltzer@stripe.com' },
           { name: 'shayperez@stripe.com' },
+          { name: 'yuhsin@stripe.com' },
         ],
         zoomLink: 'https://stripe.zoom.us/j/91961598884',
       },
     },
-    createdAt: todayAt(0, 0),
-    lastTouchedAt: todayAt(8, 0),
+    createdAt: daysAgo(30),
+    lastTouchedAt: hoursAgo(1),
   },
   {
-    id: 'cal-pas-biweekly',
-    tag: '#PAS',
+    id: 'cal-design-crit',
+    tag: '#Design',
     type: 'event',
     priority: 4,
-    title: '🍩 PAS bi-weekly',
-    snippet: 'Payments and Support design bi-weekly sync',
+    title: 'Payments Acceptance Crit',
+    snippet: 'Weekly design critique session',
     source: 'calendar',
     sourceMeta: {
       source: 'calendar',
       meta: {
         eventType: 'standup',
-        startsAt: '2026-03-23T10:00:00',
-        endsAt: '2026-03-23T10:30:00',
-        tetheredArtifacts: ['https://docs.google.com/document/d/15dn9jt75ISH75lsw_HSkoOTLrI67nn9sxuFqam-nAUo/edit'],
-        attendees: [
-          { name: 'katiek@stripe.com' },
-        ],
-        zoomLink: 'https://stripe.zoom.us/j/97520487207',
-      },
-    },
-    createdAt: todayAt(0, 0),
-    lastTouchedAt: todayAt(8, 0),
-  },
-  {
-    id: 'cal-anne-catherine-ryan',
-    tag: '#1on1',
-    type: 'event',
-    priority: 3,
-    title: 'Anne Catherine / Ryan',
-    snippet: '1:1 sync with Anne Catherine',
-    source: 'calendar',
-    sourceMeta: {
-      source: 'calendar',
-      meta: {
-        eventType: 'oneOnOne',
-        startsAt: '2026-03-23T10:30:00',
-        endsAt: '2026-03-23T11:00:00',
-        tetheredArtifacts: [],
-        attendees: [
-          { name: 'annecath@stripe.com' },
-        ],
-        zoomLink: 'https://stripe.zoom.us/j/96644612889',
-      },
-    },
-    createdAt: todayAt(0, 0),
-    lastTouchedAt: todayAt(8, 0),
-  },
-  {
-    id: 'cal-ryan-katie',
-    tag: '#1on1',
-    type: 'event',
-    priority: 4,
-    title: 'Ryan / Katie',
-    snippet: '1:1 sync with Katie Koch',
-    source: 'calendar',
-    sourceMeta: {
-      source: 'calendar',
-      meta: {
-        eventType: 'oneOnOne',
-        startsAt: '2026-03-24T12:30:00',
-        endsAt: '2026-03-24T13:00:00',
-        tetheredArtifacts: ['https://drive.google.com/open?id=1q-wZhopMpi0aqNJV1RSqjnfGNUKivplIZYjv5iaRvNo'],
-        attendees: [
-          { name: 'katiek@stripe.com' },
-        ],
-        zoomLink: 'https://stripe.zoom.us/j/95949759347',
-      },
-    },
-    createdAt: todayAt(0, 0),
-    lastTouchedAt: todayAt(8, 0),
-  },
-  {
-    id: 'cal-radar-enterprise-xfn',
-    tag: '#Radar',
-    type: 'event',
-    priority: 4,
-    title: '[Radar Enterprise] XFN Meeting',
-    snippet: 'Cross-functional meeting for Radar Enterprise',
-    source: 'calendar',
-    sourceMeta: {
-      source: 'calendar',
-      meta: {
-        eventType: 'meeting',
-        startsAt: '2026-03-24T10:00:00',
-        endsAt: '2026-03-24T10:30:00',
+        startsAt: hoursFromNow(4),
+        endsAt: hoursFromNow(5),
         tetheredArtifacts: [],
         attendees: [
           { name: 'katiek@stripe.com' },
-          { name: 'jacobmeltzer@stripe.com' },
-          { name: 'blair@stripe.com' },
-        ],
-        zoomLink: 'https://stripe.zoom.us/j/92289006928',
-      },
-    },
-    createdAt: todayAt(0, 0),
-    lastTouchedAt: todayAt(8, 0),
-  },
-  {
-    id: 'cal-radar-overview-weekly',
-    tag: '#Radar',
-    type: 'event',
-    priority: 4,
-    title: 'Radar Overview: Weekly Working Group',
-    snippet: 'Weekly working group for Radar Overview feature',
-    source: 'calendar',
-    sourceMeta: {
-      source: 'calendar',
-      meta: {
-        eventType: 'standup',
-        startsAt: '2026-03-24T11:00:00',
-        endsAt: '2026-03-24T11:25:00',
-        tetheredArtifacts: ['https://docs.google.com/document/d/1dVaW0c0XqayqnU6Yds6pdHcqY6BFlS_DpemnaTldB_Y/edit'],
-        attendees: [
-          { name: 'sreeramv@stripe.com' },
-          { name: 'winfield@stripe.com' },
-          { name: 'rogerlai@stripe.com' },
-        ],
-        zoomLink: 'https://stripe.zoom.us/j/97883467333',
-      },
-    },
-    createdAt: todayAt(0, 0),
-    lastTouchedAt: todayAt(8, 0),
-  },
-  {
-    id: 'cal-risk-platform-design',
-    tag: '#RiskPlatform',
-    type: 'event',
-    priority: 4,
-    title: 'Risk platform design x-org [weekly]',
-    snippet: 'Cross-org design sync for Risk platform',
-    source: 'calendar',
-    sourceMeta: {
-      source: 'calendar',
-      meta: {
-        eventType: 'standup',
-        startsAt: '2026-03-26T09:00:00',
-        endsAt: '2026-03-26T10:00:00',
-        tetheredArtifacts: ['https://docs.google.com/document/d/1ZJYhVfKxdwiwsOvyL6xVAcPaEgy5Twt6GPWbea2DW1o/edit'],
-        attendees: [
-          { name: 'katiek@stripe.com' },
-          { name: 'sadhika@stripe.com' },
           { name: 'annecath@stripe.com' },
         ],
-        zoomLink: 'https://stripe.zoom.us/j/97366039462',
+        zoomLink: 'https://stripe.zoom.us/j/91889757983',
       },
     },
-    createdAt: todayAt(0, 0),
-    lastTouchedAt: todayAt(8, 0),
+    createdAt: daysAgo(30),
+    lastTouchedAt: hoursAgo(1),
   },
   {
-    id: 'cal-radar-staff-weekly',
+    id: 'cal-tomorrow-standup',
     tag: '#Radar',
     type: 'event',
-    priority: 5,
+    priority: 4,
     title: 'Radar Staff Weekly',
     snippet: 'Weekly staff meeting for Radar team',
     source: 'calendar',
@@ -249,351 +504,50 @@ const calendarItems: MindItem[] = [
       source: 'calendar',
       meta: {
         eventType: 'standup',
-        startsAt: '2026-03-26T10:00:00',
-        endsAt: '2026-03-26T10:25:00',
-        tetheredArtifacts: ['https://docs.google.com/document/d/1fNP1pku-9n3qerHZghvNdTtM-UTuYU6piCCM8taUaqg/edit'],
+        startsAt: daysFromNow(1),
+        endsAt: new Date(new Date(daysFromNow(1)).getTime() + 30 * 60 * 1000).toISOString(),
+        tetheredArtifacts: [],
         attendees: [
           { name: 'jackerman@stripe.com' },
           { name: 'jacobmeltzer@stripe.com' },
-          { name: 'yuhsin@stripe.com' },
         ],
         zoomLink: 'https://stripe.zoom.us/j/92172716597',
       },
     },
-    createdAt: todayAt(0, 0),
-    lastTouchedAt: todayAt(8, 0),
-  },
-  {
-    id: 'cal-payintel-product-review',
-    tag: '#PayIntel',
-    type: 'event',
-    priority: 5,
-    title: 'PayIntel Product Review [Weekly]',
-    snippet: 'Weekly product review with PayIntel team',
-    source: 'calendar',
-    sourceMeta: {
-      source: 'calendar',
-      meta: {
-        eventType: 'standup',
-        startsAt: '2026-03-26T10:30:00',
-        endsAt: '2026-03-26T11:30:00',
-        tetheredArtifacts: ['https://docs.google.com/spreadsheets/d/1PXbJtq4vKP07e1bFzXq112ybabL0r8OaP7LBom8EC5I/edit'],
-        attendees: [
-          { name: 'jackerman@stripe.com' },
-        ],
-        zoomLink: 'https://stripe.zoom.us/j/96169299256',
-      },
-    },
-    createdAt: todayAt(0, 0),
-    lastTouchedAt: todayAt(8, 0),
-  },
-  {
-    id: 'cal-radar-design-planning',
-    tag: '#Radar',
-    type: 'event',
-    priority: 4,
-    title: 'Radar Design: Planning & Sync',
-    snippet: 'Planning and sync for Radar design team',
-    source: 'calendar',
-    sourceMeta: {
-      source: 'calendar',
-      meta: {
-        eventType: 'standup',
-        startsAt: '2026-03-26T11:30:00',
-        endsAt: '2026-03-26T12:00:00',
-        tetheredArtifacts: ['https://docs.google.com/document/d/1qKmbHpjI8CGx4j9TNHRCJFttT5PYX-oZVv2Xa1PNoLs/edit'],
-        attendees: [
-          { name: 'annecath@stripe.com' },
-          { name: 'shayperez@stripe.com' },
-          { name: 'katiek@stripe.com' },
-        ],
-        zoomLink: 'https://stripe.zoom.us/j/96883372595',
-      },
-    },
-    createdAt: todayAt(0, 0),
-    lastTouchedAt: todayAt(8, 0),
+    createdAt: daysAgo(30),
+    lastTouchedAt: hoursAgo(1),
   },
 ];
 
-// Slack messages from Slack MCP
-const slackItems: MindItem[] = [
-  {
-    id: 'slack-console-ai-review',
-    tag: '#AI',
-    type: 'note',
-    priority: 5,
-    title: 'Console AI Experience Review',
-    snippet: "Have you explored Console yet? I was just playing with it and we'll need to find a better way to integrate with it. Asked \"what's my fraud rate\" and it didn't know how to calculate the info.",
-    source: 'slack',
-    sourceMeta: {
-      source: 'slack',
-      meta: {
-        coreAsk: 'Reviewing Console AI experience for Radar queries',
-        collaborator: { name: 'Direct Message' },
-        threadUrl: 'https://stripe.slack.com/archives/D05SUBXP78F/p1773976956519509',
-        channel: 'DM',
-      },
-    },
-    createdAt: todayAt(10, 0),
-    lastTouchedAt: todayAt(10, 0),
-  },
-  {
-    id: 'slack-disputes-handoff',
-    tag: '#Disputes',
-    type: 'note',
-    priority: 4,
-    title: 'Disputes Handoff Discussion',
-    snippet: "That'd be great, we had a handoff discussion this afternoon but would be great to develop a tighter sync and workflow with the team.",
-    source: 'slack',
-    sourceMeta: {
-      source: 'slack',
-      meta: {
-        coreAsk: 'Improving handoff workflow with disputes team',
-        collaborator: { name: 'ishanvirk, shayperez, katiek' },
-        threadUrl: 'https://stripe.slack.com/archives/C0AGL2J6KFX/p1773959373523239',
-        channel: 'mpdm-disputes',
-      },
-    },
-    createdAt: todayAt(9, 30),
-    lastTouchedAt: todayAt(9, 30),
-  },
-  {
-    id: 'slack-smart-disputes-research',
-    tag: '#Disputes',
-    type: 'note',
-    priority: 5,
-    title: 'Smart Disputes Desk Research',
-    snippet: 'TL;DR: Stripe\'s automation is seen as a "Safety Net" (for forgotten deadlines) vs. a "Black Box" (for weak evidence and surprise fees). It\'s highly expected for SaaS/Digital goods but viewed with skepticism for physical shipping.',
-    source: 'slack',
-    sourceMeta: {
-      source: 'slack',
-      meta: {
-        coreAsk: 'Customer sentiment research on dispute auto-submit behavior',
-        collaborator: { name: 'katiek, jesstam' },
-        threadUrl: 'https://stripe.slack.com/archives/C08QZC57TD4/p1773956055380819',
-        channel: '#radar-disputes',
-        hasResearchFindings: true,
-      },
-    },
-    createdAt: todayAt(9, 0),
-    lastTouchedAt: todayAt(9, 0),
-  },
-  {
-    id: 'slack-designing-ai',
-    tag: '#DesigningAI',
-    type: 'note',
-    priority: 3,
-    title: 'AI Design: Recruiting + Fictional Data',
-    snippet: 'The process of recruiting specific users → generating fictional data to make the product feel like their own is such a great unlock!',
-    source: 'slack',
-    sourceMeta: {
-      source: 'slack',
-      meta: {
-        coreAsk: 'Discussing AI-first design methodologies',
-        collaborator: { name: '#designing-ai' },
-        threadUrl: 'https://stripe.slack.com/archives/C08P4284UTV/p1773957167506239',
-        channel: '#designing-ai',
-      },
-    },
-    createdAt: todayAt(8, 45),
-    lastTouchedAt: todayAt(8, 45),
-  },
-  {
-    id: 'slack-radar-overview-jam',
-    tag: '#Radar',
-    type: 'note',
-    priority: 4,
-    title: 'Radar Overview Jam Session',
-    snippet: 'With the product meeting canceled anyone want to jam on overview until the hour? Made a version to click through that idea this morning.',
-    source: 'slack',
-    sourceMeta: {
-      source: 'slack',
-      meta: {
-        coreAsk: 'Organizing impromptu design jam for Radar overview',
-        collaborator: { name: '#radar-design' },
-        threadUrl: 'https://stripe.slack.com/archives/C0A1GU3K9KM/p1773952660621959',
-        channel: '#radar-design',
-        hasPrototype: true,
-      },
-    },
-    createdAt: todayAt(8, 30),
-    lastTouchedAt: todayAt(8, 30),
-  },
-  {
-    id: 'slack-risk-platform-feedback',
-    tag: '#RiskPlatform',
-    type: 'note',
-    priority: 3,
-    title: 'Risk Platform Design Feedback',
-    snippet: "I do too but the problem is that then it's a duplicate of the module below it. Need to think about it more.",
-    source: 'slack',
-    sourceMeta: {
-      source: 'slack',
-      meta: {
-        coreAsk: 'Design feedback on Risk Platform module',
-        collaborator: { name: '#risk-platform-design' },
-        threadUrl: 'https://stripe.slack.com/archives/C09RUL37EN7/p1773942724595549',
-        channel: '#risk-platform-design',
-        needsDecision: true,
-      },
-    },
-    createdAt: todayAt(7, 30),
-    lastTouchedAt: todayAt(7, 30),
-  },
-];
+// ═══════════════════════════════════════════════════════════════════════════
+// COMBINE ALL ITEMS
+// ═══════════════════════════════════════════════════════════════════════════
 
-// Drive documents from Google Drive MCP
-const driveItems: MindItem[] = [
-  {
-    id: 'drive-radar-design-planning',
-    tag: '#Radar',
-    type: 'artifact',
-    priority: 5,
-    title: 'Notes - Radar Design: Planning & Sync',
-    snippet: 'Planning and sync notes for Radar design team - last modified today',
-    source: 'drive',
-    sourceMeta: {
-      source: 'drive',
-      meta: {
-        docTitle: 'Notes - Radar Design: Planning & Sync',
-        executiveSummary: 'Weekly planning notes for design team',
-        lastEditors: [{ name: 'Ryan Spencer', editedAt: todayAt(11, 47) }],
-        webUrl: 'https://docs.google.com/document/d/1qKmbHpjI8CGx4j9TNHRCJFttT5PYX-oZVv2Xa1PNoLs/edit',
-      },
-    },
-    createdAt: '2025-11-12T16:28:29Z',
-    lastTouchedAt: todayAt(11, 47),
-  },
-  {
-    id: 'drive-radar-overview-prototype',
-    tag: '#Radar',
-    type: 'artifact',
-    priority: 5,
-    title: 'Radar overview prototype analysis',
-    snippet: 'Analysis of Radar overview prototype explorations',
-    source: 'drive',
-    sourceMeta: {
-      source: 'drive',
-      meta: {
-        docTitle: 'Radar overview prototype analysis',
-        executiveSummary: 'Prototype analysis and findings',
-        lastEditors: [{ name: 'Ryan Spencer', editedAt: '2026-03-18T23:20:23Z' }],
-        webUrl: 'https://docs.google.com/document/d/1jvWFjLtp7ohi8vn-jptgKqu307L0SaAiMu_sJWgz1z0/edit',
-      },
-    },
-    createdAt: '2026-03-18T22:38:12Z',
-    lastTouchedAt: '2026-03-18T23:20:23Z',
-  },
-  {
-    id: 'drive-payintel-design-tracker',
-    tag: '#PayIntel',
-    type: 'artifact',
-    priority: 4,
-    title: 'Payment intelligence design tracker',
-    snippet: 'go/payintel-design-tracker - Project tracking spreadsheet',
-    source: 'drive',
-    sourceMeta: {
-      source: 'drive',
-      meta: {
-        docTitle: 'Payment intelligence design tracker',
-        executiveSummary: 'Design project tracker for PayIntel',
-        lastEditors: [{ name: 'Katie Koch', editedAt: '2026-03-16T15:47:27Z' }],
-        webUrl: 'https://docs.google.com/spreadsheets/d/1gN_F70CgKP8WYHK_EGyJVgfHChPGkHLkObppLwVQOK8/edit',
-      },
-    },
-    createdAt: '2024-05-30T21:02:48Z',
-    lastTouchedAt: '2026-03-16T15:47:27Z',
-  },
-  {
-    id: 'drive-disputes-prevention-notes',
-    tag: '#Disputes',
-    type: 'artifact',
-    priority: 4,
-    title: 'Disputes Prevention | Design Notes',
-    snippet: 'Design notes for dispute prevention feature',
-    source: 'drive',
-    sourceMeta: {
-      source: 'drive',
-      meta: {
-        docTitle: 'Disputes Prevention | Design Notes',
-        executiveSummary: 'Design documentation for disputes prevention',
-        lastEditors: [{ name: 'Ryan Spencer', editedAt: '2025-03-26T23:35:42Z' }],
-        webUrl: 'https://docs.google.com/document/d/1UJVN9ivBsgRK7lmcWk2SQuOMqFX7dIwQdkI6A7V__2s/edit',
-      },
-    },
-    createdAt: '2025-02-10T18:48:35Z',
-    lastTouchedAt: '2025-03-26T23:35:42Z',
-  },
-  {
-    id: 'drive-radar-sku-notes',
-    tag: '#Radar',
-    type: 'artifact',
-    priority: 4,
-    title: 'Radar SKU Design: Notes & AIs',
-    snippet: 'Notes and action items for Radar SKU design work',
-    source: 'drive',
-    sourceMeta: {
-      source: 'drive',
-      meta: {
-        docTitle: 'Radar SKU Design: Notes & AIs',
-        executiveSummary: 'SKU design notes and action items',
-        lastEditors: [{ name: 'Ryan Spencer', editedAt: '2025-09-06T04:59:05Z' }],
-        webUrl: 'https://docs.google.com/document/d/1Pf2D_oQYoXIBTMY8qMNpc1_fKGGAM0cjLHy2f6Cywhg/edit',
-      },
-    },
-    createdAt: '2025-08-13T16:30:55Z',
-    lastTouchedAt: '2025-09-06T04:59:05Z',
-  },
-  {
-    id: 'drive-radar-overview-ux-brief',
-    tag: '#Radar',
-    type: 'artifact',
-    priority: 4,
-    title: 'Radar Overview/Performance: UX Brief',
-    snippet: 'UX brief for Radar Overview and Performance features',
-    source: 'drive',
-    sourceMeta: {
-      source: 'drive',
-      meta: {
-        docTitle: 'Radar Overview/Performance: UX Brief',
-        executiveSummary: 'Design brief for overview and performance',
-        lastEditors: [{ name: 'Ryan Spencer', editedAt: '2026-01-27T21:26:11Z' }],
-        webUrl: 'https://docs.google.com/document/d/1l4rj4_0acf8Xtb1IGcDGkv5M2gmLdSbeuKL4sga2TBQ/edit',
-      },
-    },
-    createdAt: '2025-12-15T19:36:28Z',
-    lastTouchedAt: '2026-01-27T21:26:11Z',
-  },
-  {
-    id: 'drive-radar-design-vision',
-    tag: '#Radar',
-    type: 'artifact',
-    priority: 4,
-    title: 'Radar design vision 2026: Trust layer',
-    snippet: 'Vision document for future of Radar - Trust layer concept',
-    source: 'drive',
-    sourceMeta: {
-      source: 'drive',
-      meta: {
-        docTitle: 'Radar design vision 2026: Trust layer',
-        executiveSummary: 'Future vision and roadmap for Radar',
-        lastEditors: [{ name: 'Ryan Spencer', editedAt: '2025-08-27T23:12:42Z' }],
-        webUrl: 'https://docs.google.com/document/d/1yP0ZjpUWipGCHub0e9MFRdxHnh1NOFLoHNs9t6Qaxbs/edit',
-      },
-    },
-    createdAt: '2025-08-16T06:49:43Z',
-    lastTouchedAt: '2025-08-27T23:12:42Z',
-  },
-];
-
-// Combine all items
 export const liveItems: MindItem[] = [
-  ...calendarItems,
-  ...slackItems,
-  ...driveItems,
+  // Journey 1: Meeting Prep
+  ...upcomingMeetings,
+  katieSlackThread,
+  
+  // Journey 3: Morning Scan (Waiting items)
+  ...waitingItems,
+  
+  // Journey 4: Commitment Catch
+  ...commitmentItems,
+  
+  // Journey 9: Stale Nudges
+  ...staleItems,
+  
+  // Journeys 2 & 10: Timeline context
+  ...timelineItems,
+  
+  // Journey 6: Project variety
+  ...projectItems,
+  
+  // Journey 8: Today's activity
+  ...todayItems,
 ];
 
-// Extract all unique attendees from calendar events
+// Export helpers for meeting prep
 export function getAllCollaborators(items: MindItem[]): string[] {
   const collaborators = new Set<string>();
   
@@ -610,7 +564,6 @@ export function getAllCollaborators(items: MindItem[]): string[] {
   return Array.from(collaborators);
 }
 
-// Get items related to a specific meeting (by shared attendees or tags)
 export function getItemsRelatedToMeeting(meeting: MindItem, allItems: MindItem[]): MindItem[] {
   if (meeting.source !== 'calendar') return [];
   
@@ -620,11 +573,8 @@ export function getItemsRelatedToMeeting(meeting: MindItem, allItems: MindItem[]
   
   return allItems.filter(item => {
     if (item.id === meeting.id) return false;
-    
-    // Same tag
     if (item.tag === meetingTag) return true;
     
-    // Shared collaborators (for Slack items)
     if (item.source === 'slack') {
       const slackMeta = item.sourceMeta.meta as { collaborator?: { name: string } };
       const collaboratorNames = slackMeta.collaborator?.name.split(/[,\s]+/).map(n => n.toLowerCase()) || [];

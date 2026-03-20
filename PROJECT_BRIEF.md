@@ -412,7 +412,8 @@ Each journey maps to the Top 10 Flows that demonstrate INDEX's promise.
 ---
 
 **1. The 5-Minute Meeting Prep** ✓
-- Banner appears when meeting is ≤15 minutes away
+- Meeting prep pill appears in header toolbar when meeting is ≤30 minutes away
+- Shows: pulsing green dot, meeting title, countdown
 - One-click opens Meeting Prep Panel with:
   - Related documents (by tag and attendee)
   - Recent Slack conversations with attendees
@@ -433,13 +434,14 @@ Each journey maps to the Top 10 Flows that demonstrate INDEX's promise.
 - Calendar events sorted by time
 - "WAITING" badges on items needing your response
 - High-priority items surfaced automatically
-- Header shows: waiting count (⚡), next meeting countdown, overdue count
+- Header toolbar shows: meeting prep pill, waiting count (⚡), overdue count
+- Subtle dot badges on nav icons indicate state
 
 **4. The Commitment Catch** ✓
 - Commitments auto-extracted from messages ("I'll...", "Let me...")
 - Commitments view (press 6) shows all tracked promises
 - Items >3 days old surface as overdue
-- Alert bar warns of overdue commitments
+- Header indicator shows overdue count
 
 **5. The Natural Language Schedule** ✓
 - OmniBar parses "Schedule 30 minutes with Katie Koch"
@@ -471,10 +473,10 @@ Each journey maps to the Top 10 Flows that demonstrate INDEX's promise.
 
 **9. The Stale Item Nudge** ✓
 - Intelligence detects high-priority items untouched 3+ days
-- Alert bar surfaces critical stale items
+- Stale items surfaced in Focus view with suggested actions
 - Nudge includes: reason, suggested action (follow up, archive, delegate)
 - Related active items shown for context
-- Dismiss or act with one click
+- Projects view shows stale project warnings
 
 **10. The Context Handoff** ✓
 - Timeline opens scrolled to "now"
@@ -491,6 +493,9 @@ Each journey maps to the Top 10 Flows that demonstrate INDEX's promise.
 - Live data from Calendar, Slack, Drive via MCP
 - localStorage persistence with version-based refresh
 - Consistent dark design language across all views
+- Refined header toolbar: larger icons, better spacing, subtle state indicators
+- Empty states with crisp icons and clear messaging
+- Smooth opacity transitions eliminate layout flash on load
 
 ### Near-Term Focus
 - Inline quick replies without leaving INDEX

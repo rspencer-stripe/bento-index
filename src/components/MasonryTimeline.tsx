@@ -490,7 +490,7 @@ export function MasonryTimeline({ items, onItemClick, onTimeChange, onItemDelete
 
       {/* Stream mode content */}
       {mode === 'stream' && (
-        <>
+        <div className={`transition-opacity duration-300 ${isInitialized ? 'opacity-100' : 'opacity-0'}`}>
           {/* Fixed NOW bar in center of screen */}
           <div 
             className="fixed left-0 right-0 z-30 pointer-events-none px-6"
@@ -558,7 +558,7 @@ export function MasonryTimeline({ items, onItemClick, onTimeChange, onItemDelete
             {/* Extra scroll space at bottom for past */}
             <div className="h-[50vh]" />
           </div>
-        </>
+        </div>
       )}
 
       {/* Day mode content */}

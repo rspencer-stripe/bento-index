@@ -405,7 +405,7 @@ Data ingestion uses MCP (Model Context Protocol). Each source has a correspondin
 
 ## Current State
 
-### What's Working
+### Essential Journeys
 
 **Core Architecture**
 - Six-view architecture with consistent design language

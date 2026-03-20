@@ -249,60 +249,26 @@ export function MeetingPrepBanner({
   minsUntil: number; 
   onView: () => void;
 }) {
-  const isUrgent = minsUntil <= 10;
-
   return (
     <motion.div
-      initial={{ y: -50, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      exit={{ y: -50, opacity: 0 }}
-      className={`
-        fixed top-16 left-1/2 -translate-x-1/2 z-40
-        max-w-lg w-full mx-auto px-4
-      `}
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      transition={{ duration: 0.2 }}
+      className="fixed top-16 left-1/2 -translate-x-1/2 z-40"
     >
-      <div className={`
-        ${isUrgent ? 'bg-emerald-500/15 border-emerald-500/30' : 'bg-blue-500/10 border-blue-500/30'}
-        border rounded-xl backdrop-blur-xl p-3
-        shadow-lg shadow-black/20
-      `}>
-        <div className="flex items-center gap-3">
-          <div className={`${isUrgent ? 'text-emerald-400' : 'text-blue-400'}`}>
-            <Calendar size={18} />
-          </div>
-          
-          <div className="flex-1">
-            <div className="flex items-center gap-2">
-              <span className={`text-sm font-medium ${isUrgent ? 'text-emerald-400' : 'text-blue-400'}`}>
-                {meeting.title}
-              </span>
-              <span className={`
-                text-xs px-1.5 py-0.5 rounded
-                ${isUrgent ? 'bg-emerald-500/20 text-emerald-400' : 'bg-blue-500/20 text-blue-400'}
-              `}>
-                in {minsUntil}m
-              </span>
-            </div>
-            <p className="text-xs text-white/50">
-              with {meeting.attendees.slice(0, 2).join(', ')}
-              {meeting.attendees.length > 2 && ` +${meeting.attendees.length - 2}`}
-            </p>
-          </div>
-
-          <button
-            onClick={onView}
-            className={`
-              px-3 py-1.5 rounded-lg text-xs font-medium
-              ${isUrgent ? 'bg-emerald-500/20 text-emerald-400' : 'bg-blue-500/20 text-blue-400'}
-              hover:bg-white/10 transition-colors
-              flex items-center gap-1
-            `}
-          >
-            Prep
-            <ChevronRight size={12} />
-          </button>
-        </div>
-      </div>
+      <button
+        onClick={onView}
+        className="flex items-center gap-2 px-3 py-1.5 bg-[#111] border border-[#333] rounded-lg hover:border-[#444] transition-colors group"
+      >
+        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+        <span className="text-xs text-white/60 group-hover:text-white/80">
+          {meeting.title}
+        </span>
+        <span className="text-[10px] text-white/40 font-mono">
+          {minsUntil}m
+        </span>
+      </button>
     </motion.div>
   );
 }

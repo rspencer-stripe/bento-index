@@ -224,7 +224,7 @@ export function WhatsNext({ actions, onItemClick, onComplete }: WhatsNextProps) 
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
         <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4">
-          <CheckCircle size={24} className="text-white/30" />
+          <CheckCircle size={28} strokeWidth={1.5} className="text-white/50" />
         </div>
         <h3 className="text-lg font-medium text-white/70 mb-2">All caught up!</h3>
         <p className="text-sm text-white/40 max-w-sm">

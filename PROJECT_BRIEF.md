@@ -6,7 +6,7 @@ A context engine for knowledge work.
 
 ## The Problem
 
-Modern knowledge work is fragmented across a dozen tools. Slack threads, Figma files, Google Docs, calendar invites, Zoom recordings—each holds a piece of the picture, but none shows the whole.
+Modern knowledge work is fragmented across a dozen tools. Slack threads, Figma files, Google Docs, calendar invites, Zoom recordings—each holds a piece of the picture, but no shows the whole.
 
 The result is **Context Retrieval Time**: the invisible tax paid every time you ask yourself *"What was that thing?"* or *"What should I be working on?"* You spend minutes (sometimes hours) piecing together context that should be immediately available.
 

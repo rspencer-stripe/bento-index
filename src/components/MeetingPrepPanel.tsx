@@ -144,9 +144,9 @@ export function MeetingPrepPanel({ prep, isOpen, onClose, onItemClick }: Meeting
                     {prep.openQuestions.map((question, i) => (
                       <div
                         key={i}
-                        className="flex items-start gap-2 p-3 rounded-xl bg-amber-500/5 border border-amber-500/10"
+                        className="flex items-start gap-2 p-3 rounded-xl bg-white/5 border border-white/10"
                       >
-                        <span className="text-amber-400 mt-0.5">•</span>
+                        <span className="text-white/40 mt-0.5">•</span>
                         <span className="text-sm text-white/70">{question}</span>
                       </div>
                     ))}

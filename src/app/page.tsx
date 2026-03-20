@@ -22,7 +22,9 @@ import {
   Sparkles,
   Zap,
   Database,
+  Settings,
 } from 'lucide-react';
+import Link from 'next/link';
 import { SlackMeta, FigmaMeta, DriveMeta, WebMeta, ZoomMeta } from '@/lib/types';
 import Image from 'next/image';
 import { 
@@ -34,14 +36,13 @@ import {
   DailyDigest,
   CommitmentTracker,
   SchedulingModal,
-  AlertBar,
-  MeetingPrepBanner,
   MeetingPrepPanel,
 } from '@/components';
 import type { SchedulingRequest } from '@/components/OmniBar';
 import { mockItems } from '@/lib/mockData';
 import { liveItems } from '@/lib/liveData';
 import { MindItem } from '@/lib/types';
+import { DataMode, getDataMode, setDataMode, fetchLiveItems, checkIntegrationStatus, IntegrationStatus } from '@/lib/dataProvider';
 import {
   getUpcomingMeetings,
   getNextActions,
@@ -136,7 +137,7 @@ function getItemThumbnail(item: MindItem): string | null {
 
 const STORAGE_KEY = 'index-items';
 const STORAGE_VERSION_KEY = 'index-version';
-const CURRENT_VERSION = '12'; // Bump to refresh demo data for all 10 journeys
+const CURRENT_VERSION = '14'; // Force refresh for meeting prep demo
 
 const validViewModes: ViewMode[] = ['timeline', 'focus', 'meetings', 'projects', 'digest', 'commitments'];
 
@@ -153,10 +154,13 @@ export default function Home() {
   const [newlyAddedId, setNewlyAddedId] = useState<string | null>(null);
   const [schedulingModalOpen, setSchedulingModalOpen] = useState(false);
   const [schedulingRequest, setSchedulingRequest] = useState<SchedulingRequest | null>(null);
-  const [useLiveData, setUseLiveData] = useState(true);
+  const [dataMode, setDataModeState] = useState<DataMode>('demo');
+  const [integrationStatus, setIntegrationStatus] = useState<IntegrationStatus | null>(null);
+  const [isLoadingLiveData, setIsLoadingLiveData] = useState(false);
   const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set());
   const [meetingPrepOpen, setMeetingPrepOpen] = useState(false);
   const [activeMeetingPrep, setActiveMeetingPrep] = useState<MeetingPrep | null>(null);
+  const [showModeToast, setShowModeToast] = useState(false);
 
   // Get view mode from URL, default to 'focus'
   const viewParam = searchParams.get('view');
@@ -169,42 +173,60 @@ export default function Home() {
     router.push(`?view=${mode}`, { scroll: false });
   }, [router]);
 
-  // Load items from localStorage on mount, defaulting to live data
+  // Initialize data mode from localStorage
   useEffect(() => {
-    const storedVersion = localStorage.getItem(STORAGE_VERSION_KEY);
+    const savedMode = getDataMode();
+    setDataModeState(savedMode);
     
-    // If version mismatch, clear old data and use fresh live data
-    if (storedVersion !== CURRENT_VERSION) {
-      localStorage.removeItem(STORAGE_KEY);
-      localStorage.setItem(STORAGE_VERSION_KEY, CURRENT_VERSION);
-      // Combine live data with mock data for richer content
-      const combinedData = [...liveItems, ...mockItems.filter(m => 
-        !liveItems.some(l => l.title === m.title)
-      )];
-      setItems(combinedData);
-      setIsLoaded(true);
-      return;
-    }
-    
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        setItems(parsed);
-      } catch {
+    // Check integration status
+    checkIntegrationStatus().then(setIntegrationStatus);
+  }, []);
+
+  // Load items based on data mode
+  useEffect(() => {
+    const loadData = async () => {
+      const storedVersion = localStorage.getItem(STORAGE_VERSION_KEY);
+      
+      if (dataMode === 'demo') {
+        // Demo mode: use curated demo data
+        if (storedVersion !== CURRENT_VERSION) {
+          localStorage.removeItem(STORAGE_KEY);
+          localStorage.setItem(STORAGE_VERSION_KEY, CURRENT_VERSION);
+        }
         const combinedData = [...liveItems, ...mockItems.filter(m => 
           !liveItems.some(l => l.title === m.title)
         )];
         setItems(combinedData);
+        setIsLoaded(true);
+      } else {
+        // Live mode: fetch from real integrations
+        setIsLoadingLiveData(true);
+        try {
+          const liveData = await fetchLiveItems();
+          if (liveData.length > 0) {
+            setItems(liveData);
+          } else {
+            // Fallback to demo data if no live data available
+            const combinedData = [...liveItems, ...mockItems.filter(m => 
+              !liveItems.some(l => l.title === m.title)
+            )];
+            setItems(combinedData);
+          }
+        } catch (error) {
+          console.error('Failed to load live data:', error);
+          // Fallback to demo data
+          const combinedData = [...liveItems, ...mockItems.filter(m => 
+            !liveItems.some(l => l.title === m.title)
+          )];
+          setItems(combinedData);
+        }
+        setIsLoadingLiveData(false);
+        setIsLoaded(true);
       }
-    } else {
-      const combinedData = [...liveItems, ...mockItems.filter(m => 
-        !liveItems.some(l => l.title === m.title)
-      )];
-      setItems(combinedData);
-    }
-    setIsLoaded(true);
-  }, []);
+    };
+    
+    loadData();
+  }, [dataMode]);
 
   // Save items to localStorage when they change
   useEffect(() => {
@@ -218,11 +240,22 @@ export default function Home() {
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, [viewMode]);
 
-  // Keyboard shortcuts 1-6 for view modes
+  // Keyboard shortcuts: 1-6 for view modes, Cmd+Shift+D for data mode toggle
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Ignore if typing in an input
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+      
+      // Cmd+Shift+D (Mac) or Ctrl+Shift+D (Windows) toggles data mode
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'd') {
+        e.preventDefault();
+        const newMode = dataMode === 'demo' ? 'live' : 'demo';
+        setDataMode(newMode);
+        setDataModeState(newMode);
+        setShowModeToast(true);
+        setTimeout(() => setShowModeToast(false), 2000);
         return;
       }
       
@@ -237,7 +270,7 @@ export default function Home() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [setViewMode]);
+  }, [setViewMode, dataMode]);
 
   // Computed intelligence
   const upcomingMeetings = useMemo(() => getUpcomingMeetings(items, 8), [items]);
@@ -536,15 +569,6 @@ export default function Home() {
     }
   }, [imminentMeetingPrep]);
 
-  const handleRefreshLiveData = useCallback(() => {
-    // Refresh with live data
-    const combinedData = [...liveItems, ...mockItems.filter(m => 
-      !liveItems.some(l => l.title === m.title)
-    )];
-    setItems(combinedData);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(combinedData));
-  }, []);
-
   const handleUpdateItemTitle = useCallback((itemId: string, newTitle: string) => {
     setItems(prev => prev.map(item => 
       item.id === itemId ? { ...item, title: newTitle } : item
@@ -639,9 +663,6 @@ export default function Home() {
             {viewModes.map(mode => {
               const Icon = mode.icon;
               const isActive = viewMode === mode.id;
-              
-              const showBadge = mode.id === 'commitments' && overdueCount > 0;
-              const showMeetingBadge = mode.id === 'meetings' && upcomingMeetings.length > 0 && upcomingMeetings[0].minsUntil <= 60;
 
               return (
                 <button
@@ -657,12 +678,6 @@ export default function Home() {
                   title={mode.id.charAt(0).toUpperCase() + mode.id.slice(1)}
                 >
                   <Icon size={20} strokeWidth={isActive ? 2 : 1.5} />
-                  {showBadge && (
-                    <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-red-400/80" />
-                  )}
-                  {showMeetingBadge && (
-                    <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-emerald-400/80" />
-                  )}
                 </button>
               );
             })}
@@ -718,18 +733,59 @@ export default function Home() {
               </button>
             )}
 
-            {/* Data source toggle */}
+            {/* Data mode indicator - click to toggle, Cmd+Shift+D also works */}
             <button
-              onClick={handleRefreshLiveData}
-              className="flex items-center gap-1.5 text-white/30 text-sm font-mono hover:text-white/50 transition-colors"
-              title="Refresh with live data"
+              onClick={() => {
+                const newMode = dataMode === 'demo' ? 'live' : 'demo';
+                setDataMode(newMode);
+                setDataModeState(newMode);
+                setShowModeToast(true);
+                setTimeout(() => setShowModeToast(false), 2000);
+              }}
+              className={`flex items-center gap-1.5 text-sm font-mono transition-colors ${
+                dataMode === 'demo' 
+                  ? 'text-violet-400/80 hover:text-violet-400' 
+                  : 'text-emerald-400/80 hover:text-emerald-400'
+              }`}
+              title={`${dataMode === 'demo' ? 'Demo mode' : 'Live mode'} - Click or ⌘⇧D to toggle`}
             >
               <Database size={14} />
-              <span className="hidden sm:inline">Live</span>
+              <span className="hidden sm:inline">{dataMode === 'demo' ? 'Demo' : 'Live'}</span>
+              {isLoadingLiveData && (
+                <span className="w-2 h-2 rounded-full bg-current animate-pulse" />
+              )}
             </button>
+
+            {/* Settings link */}
+            <Link
+              href="/settings"
+              className="p-2 rounded-lg text-white/30 hover:text-white/60 hover:bg-white/5 transition-colors"
+              title="Settings"
+            >
+              <Settings size={16} />
+            </Link>
           </div>
         </div>
       </header>
+
+      {/* Mode change toast */}
+      <AnimatePresence>
+        {showModeToast && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="fixed bottom-6 right-6 z-50 px-4 py-2 bg-black/90 border border-white/10 rounded-lg shadow-xl backdrop-blur-sm"
+          >
+            <div className="flex items-center gap-2">
+              <Database size={16} className={dataMode === 'demo' ? 'text-violet-400' : 'text-emerald-400'} />
+              <span className="text-sm text-white/80">
+                Switched to <span className="font-medium">{dataMode === 'demo' ? 'Demo' : 'Live'}</span> mode
+              </span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Main Content */}
       <div className="flex-1 w-full">

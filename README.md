@@ -1,36 +1,127 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# INDEX
 
-## Getting Started
+**Unified context for knowledge workers.** INDEX synthesizes your work streams (Calendar, Slack, Drive, Figma) into a single, intelligent workspace that answers "what should I be working on?" without requiring you to ask.
 
-First, run the development server:
+## Quick Start
+
+```bash
+# Install dependencies
+npm install
+
+# Run the dev server
+npm run dev
+
+# Open in browser
+open http://localhost:3000
+```
+
+## Demo vs Live Mode
+
+INDEX supports two data modes:
+
+| Mode | Description | Toggle |
+|------|-------------|--------|
+| **Demo** (violet) | Curated sample data showcasing all features | Default |
+| **Live** (green) | Your real data from connected integrations | Requires setup |
+
+**Toggle between modes:** Press `⌘⇧D` (Mac) or `Ctrl+Shift+D` (Windows), or click the mode indicator in the header.
+
+## Setting Up Live Integrations
+
+### 1. Create environment file
+
+Create a `.env.local` file in the project root:
+
+```bash
+# Google (Calendar + Drive)
+GOOGLE_CLIENT_ID=your_client_id
+GOOGLE_CLIENT_SECRET=your_client_secret
+
+# Slack
+SLACK_BOT_TOKEN=xoxb-your-token
+
+# Figma
+FIGMA_ACCESS_TOKEN=your_figma_token
+```
+
+### 2. Get API Credentials
+
+#### Google Calendar & Drive
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select existing
+3. Enable Calendar API and Drive API
+4. Create OAuth 2.0 credentials
+5. Add authorized redirect URIs
+
+#### Slack
+1. Go to [Slack API](https://api.slack.com/apps)
+2. Create a new app
+3. Add required scopes: `channels:read`, `channels:history`, `search:read`, `users:read`
+4. Install to your workspace
+5. Copy the Bot User OAuth Token
+
+#### Figma
+1. Go to [Figma Settings](https://www.figma.com/settings)
+2. Generate a personal access token
+
+### 3. Restart & Switch to Live Mode
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Then press `⌘⇧D` to switch to Live mode.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Keyboard Shortcuts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Shortcut | Action |
+|----------|--------|
+| `1-6` | Switch between views (Timeline, Focus, Meetings, Projects, Digest, Commitments) |
+| `⌘K` | Open OmniBar for quick capture or scheduling |
+| `⌘⇧D` | Toggle Demo/Live mode |
 
-## Learn More
+## Views
 
-To learn more about Next.js, take a look at the following resources:
+1. **Timeline** - Continuous vertical scroll through all your context, anchored at "now"
+2. **Focus** - What needs your attention right now
+3. **Meetings** - Today's meetings with prep materials auto-generated
+4. **Projects** - Health status of active projects by tag
+5. **Digest** - Daily summary of activity
+6. **Commitments** - Track promises made in conversations
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Deploy to Vercel
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Push to GitHub
+2. Import in [Vercel](https://vercel.com/new)
+3. Add environment variables in project settings
+4. Deploy
 
-## Deploy on Vercel
+## Architecture
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```
+src/
+├── app/
+│   ├── page.tsx              # Main app with all views
+│   ├── settings/page.tsx     # Integration configuration
+│   └── api/integrations/     # API routes for live data
+├── components/               # UI components
+├── lib/
+│   ├── types.ts             # MindItem schema
+│   ├── intelligence.ts       # Meeting prep, insights, nudges
+│   ├── dataProvider.ts       # Demo/Live mode switching
+│   ├── liveData.ts          # Demo dataset
+│   └── mockData.ts          # Additional mock items
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## For Stripe Employees
+
+This tool is designed to work with Stripe's internal tooling. When running locally in Cursor with MCP enabled, the live integrations can also leverage:
+- Toolshed MCP for Slack search
+- Google Calendar MCP for events
+- Internal Drive access
+
+See `/settings` in the app for detailed setup instructions.
+
+---
+
+Built with Next.js, Tailwind CSS, and Framer Motion.

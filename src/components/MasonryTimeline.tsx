@@ -36,16 +36,8 @@ function getTemporalRelevance(item: MindItem): number {
   return -hoursSince;
 }
 
-function getItemOpacity(item: MindItem): number {
-  const now = Date.now();
-  const touchedTime = new Date(item.lastTouchedAt).getTime();
-  const hoursSince = (now - touchedTime) / (1000 * 60 * 60);
-
-  if (hoursSince <= 1) return 1;
-  if (hoursSince <= 4) return 0.95;
-  if (hoursSince <= 24) return 0.85;
-  if (hoursSince <= 48) return 0.7;
-  return 0.5;
+function getItemOpacity(_item: MindItem): number {
+  return 1;
 }
 
 export function MasonryTimeline({ items, onItemClick, onTimeChange, onItemDelete, onItemComplete, onItemDefer, onItemsReorder, newlyAddedId }: MasonryTimelineProps) {
@@ -499,7 +491,7 @@ export function MasonryTimeline({ items, onItemClick, onTimeChange, onItemDelete
             <div className="flex items-center w-full">
               {/* Left label with pulsing/static dot */}
               <div className="flex items-center gap-2 mr-4 pointer-events-auto">
-                {isViewingNow ? (
+                {isViewingNow && (
                   <motion.div 
                     className="w-2 h-2 rounded-full bg-emerald-400"
                     animate={{ 
@@ -512,13 +504,11 @@ export function MasonryTimeline({ items, onItemClick, onTimeChange, onItemDelete
                       ease: "easeInOut" 
                     }}
                   />
-                ) : (
-                  <div className="w-2 h-2 rounded-full bg-rose-400/80" />
                 )}
                 <button
                   onClick={scrollToNow}
                   className={`text-[10px] font-mono uppercase tracking-wider transition-colors ${
-                    isViewingNow ? 'text-white/50' : 'text-rose-400/80 hover:text-rose-400 cursor-pointer'
+                    isViewingNow ? 'text-white/50' : 'text-white/70 hover:text-white cursor-pointer'
                   }`}
                 >
                   {isViewingNow ? 'now' : formatViewedTime(viewedTime)}
@@ -526,11 +516,7 @@ export function MasonryTimeline({ items, onItemClick, onTimeChange, onItemDelete
               </div>
               
               {/* The line */}
-              <div className={`flex-1 h-px transition-colors ${
-                isViewingNow 
-                  ? 'bg-gradient-to-r from-white/20 to-transparent' 
-                  : 'bg-gradient-to-r from-rose-400/30 to-transparent'
-              }`} />
+              <div className="flex-1 h-px bg-gradient-to-r from-white/20 to-transparent" />
             </div>
           </div>
 

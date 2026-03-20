@@ -137,7 +137,7 @@ function getItemThumbnail(item: MindItem): string | null {
 
 const STORAGE_KEY = 'index-items';
 const STORAGE_VERSION_KEY = 'index-version';
-const CURRENT_VERSION = '15'; // Enhanced demo data for all 10 journeys
+const CURRENT_VERSION = '16'; // Richer Katie 1:1 meeting prep context
 
 const validViewModes: ViewMode[] = ['timeline', 'focus', 'meetings', 'projects', 'digest', 'commitments'];
 

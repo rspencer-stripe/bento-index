@@ -42,27 +42,113 @@ const imminentMeeting: MindItem = {
   lastTouchedAt: hoursAgo(1),
 };
 
-// Related context for the imminent meeting
-const katieSlackThread: MindItem = {
-  id: 'slack-katie-radar-question',
-  tag: '#Radar',
-  type: 'note',
-  priority: 4,
-  title: 'Radar SKU timeline question',
-  snippet: 'Katie: "Can you send me the updated timeline for the SKU refresh? Need to sync with product on Monday."',
-  source: 'slack',
-  sourceMeta: {
+// Related context for the imminent meeting - rich Katie context
+const katieRelatedItems: MindItem[] = [
+  // Recent Slack thread about SKU timeline
+  {
+    id: 'slack-katie-radar-question',
+    tag: '#Radar',
+    type: 'note',
+    priority: 4,
+    title: 'Radar SKU timeline question',
+    snippet: 'Katie: "Can you send me the updated timeline for the SKU refresh? Need to sync with product on Monday."',
     source: 'slack',
-    meta: {
-      coreAsk: 'Timeline for SKU refresh needed',
-      collaborator: { name: 'katiek' },
-      threadUrl: 'https://stripe.slack.com/archives/D05SUBXP78F/p1773976956519509',
-      channel: 'DM with Katie',
+    sourceMeta: {
+      source: 'slack',
+      meta: {
+        coreAsk: 'Timeline for SKU refresh needed',
+        collaborator: { name: 'katiek' },
+        threadUrl: 'https://stripe.slack.com/archives/D05SUBXP78F/p1773976956519509',
+        channel: 'DM with Katie',
+      },
     },
+    createdAt: daysAgo(2),
+    lastTouchedAt: daysAgo(1),
   },
-  createdAt: daysAgo(2),
-  lastTouchedAt: daysAgo(1),
-};
+  // Figma file Katie commented on
+  {
+    id: 'figma-katie-overview-comments',
+    tag: '#Radar',
+    type: 'artifact',
+    priority: 4,
+    title: 'Radar Overview - Katie\'s feedback',
+    snippet: 'Katie left 3 comments: "Love the direction on the summary cards" / "Can we make the fraud rate more prominent?" / "What about mobile?"',
+    source: 'figma',
+    sourceMeta: {
+      source: 'figma',
+      meta: {
+        fileName: 'Radar Overview - v3 explorations',
+        lastModified: daysAgo(1),
+        desktopUrl: 'figma://file/abc123',
+      },
+    },
+    createdAt: daysAgo(3),
+    lastTouchedAt: daysAgo(1),
+  },
+  // Shared 1:1 doc
+  {
+    id: 'drive-katie-1on1-doc',
+    tag: '#Radar',
+    type: 'artifact',
+    priority: 4,
+    title: 'Ryan / Katie 1:1 Notes',
+    snippet: 'Running notes from weekly syncs. Last topic: Radar overview timeline, SKU refresh dependencies',
+    source: 'drive',
+    sourceMeta: {
+      source: 'drive',
+      meta: {
+        docTitle: 'Ryan / Katie 1:1 Notes',
+        executiveSummary: '1:1 running notes',
+        lastEditors: [{ name: 'Katie Koch', editedAt: daysAgo(7) }],
+        webUrl: 'https://docs.google.com/document/d/1q-wZhopMpi0aqNJV1RSqjnfGNUKivplIZYjv5iaRvNo/edit',
+      },
+    },
+    createdAt: daysAgo(90),
+    lastTouchedAt: daysAgo(7),
+  },
+  // Another recent Slack thread
+  {
+    id: 'slack-katie-user-research',
+    tag: '#Radar',
+    type: 'note',
+    priority: 3,
+    title: 'User research sync with Katie',
+    snippet: 'Katie: "The research findings are really compelling. Should we present to leadership next week? What do you think about the fraud rate insights?"',
+    source: 'slack',
+    sourceMeta: {
+      source: 'slack',
+      meta: {
+        coreAsk: 'Present research to leadership?',
+        collaborator: { name: 'katiek' },
+        threadUrl: 'https://stripe.slack.com/archives/D05SUBXP78F/p1773890000000001',
+        channel: 'DM with Katie',
+      },
+    },
+    createdAt: daysAgo(3),
+    lastTouchedAt: daysAgo(3),
+  },
+  // Discussion about priorities
+  {
+    id: 'slack-katie-priorities',
+    tag: '#Radar',
+    type: 'note',
+    priority: 4,
+    title: 'Q2 priorities discussion',
+    snippet: 'Katie: "For Q2, I think we should focus on the overview dashboard first, then tackle the detailed views. Does that align with your thinking?"',
+    source: 'slack',
+    sourceMeta: {
+      source: 'slack',
+      meta: {
+        coreAsk: 'Q2 priority alignment',
+        collaborator: { name: 'katiek' },
+        threadUrl: 'https://stripe.slack.com/archives/D05SUBXP78F/p1773800000000002',
+        channel: 'DM with Katie',
+      },
+    },
+    createdAt: daysAgo(5),
+    lastTouchedAt: daysAgo(5),
+  },
+];
 
 // ═══════════════════════════════════════════════════════════════════════════
 // JOURNEY 3: Morning Scan - Items with WAITING badges
@@ -552,9 +638,9 @@ const upcomingMeetings: MindItem[] = [
 // ═══════════════════════════════════════════════════════════════════════════
 
 export const liveItems: MindItem[] = [
-  // Journey 1: Meeting Prep
+  // Journey 1: Meeting Prep - Katie 1:1 with rich context
   ...upcomingMeetings,
-  katieSlackThread,
+  ...katieRelatedItems,
   
   // Journey 3: Morning Scan (Waiting items)
   ...waitingItems,

@@ -20,6 +20,8 @@ import {
   Globe,
   Video,
   Sparkles,
+  Zap,
+  Database,
 } from 'lucide-react';
 import { SlackMeta, FigmaMeta, DriveMeta, WebMeta, ZoomMeta } from '@/lib/types';
 import Image from 'next/image';
@@ -32,9 +34,13 @@ import {
   DailyDigest,
   CommitmentTracker,
   SchedulingModal,
+  AlertBar,
+  MeetingPrepBanner,
+  MeetingPrepPanel,
 } from '@/components';
 import type { SchedulingRequest } from '@/components/OmniBar';
 import { mockItems } from '@/lib/mockData';
+import { liveItems } from '@/lib/liveData';
 import { MindItem } from '@/lib/types';
 import {
   getUpcomingMeetings,
@@ -42,6 +48,11 @@ import {
   getProjectHealth,
   extractCommitments,
   generateDailyDigest,
+  getUrgentAlerts,
+  getStaleNudges,
+  getWaitingItems,
+  generateMeetingPrep,
+  MeetingPrep,
 } from '@/lib/intelligence';
 
 type ViewMode = 'timeline' | 'focus' | 'meetings' | 'projects' | 'digest' | 'commitments';
@@ -125,7 +136,7 @@ function getItemThumbnail(item: MindItem): string | null {
 
 const STORAGE_KEY = 'index-items';
 const STORAGE_VERSION_KEY = 'index-version';
-const CURRENT_VERSION = '10'; // Bump this to force refresh
+const CURRENT_VERSION = '11'; // Bump this to force refresh with live data
 
 const validViewModes: ViewMode[] = ['timeline', 'focus', 'meetings', 'projects', 'digest', 'commitments'];
 
@@ -142,6 +153,10 @@ export default function Home() {
   const [newlyAddedId, setNewlyAddedId] = useState<string | null>(null);
   const [schedulingModalOpen, setSchedulingModalOpen] = useState(false);
   const [schedulingRequest, setSchedulingRequest] = useState<SchedulingRequest | null>(null);
+  const [useLiveData, setUseLiveData] = useState(true);
+  const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set());
+  const [meetingPrepOpen, setMeetingPrepOpen] = useState(false);
+  const [activeMeetingPrep, setActiveMeetingPrep] = useState<MeetingPrep | null>(null);
 
   // Get view mode from URL, default to 'focus'
   const viewParam = searchParams.get('view');
@@ -154,15 +169,19 @@ export default function Home() {
     router.push(`?view=${mode}`, { scroll: false });
   }, [router]);
 
-  // Load items from localStorage on mount
+  // Load items from localStorage on mount, defaulting to live data
   useEffect(() => {
     const storedVersion = localStorage.getItem(STORAGE_VERSION_KEY);
     
-    // If version mismatch, clear old data and use fresh mock data
+    // If version mismatch, clear old data and use fresh live data
     if (storedVersion !== CURRENT_VERSION) {
       localStorage.removeItem(STORAGE_KEY);
       localStorage.setItem(STORAGE_VERSION_KEY, CURRENT_VERSION);
-      setItems(mockItems);
+      // Combine live data with mock data for richer content
+      const combinedData = [...liveItems, ...mockItems.filter(m => 
+        !liveItems.some(l => l.title === m.title)
+      )];
+      setItems(combinedData);
       setIsLoaded(true);
       return;
     }
@@ -173,10 +192,16 @@ export default function Home() {
         const parsed = JSON.parse(stored);
         setItems(parsed);
       } catch {
-        setItems(mockItems);
+        const combinedData = [...liveItems, ...mockItems.filter(m => 
+          !liveItems.some(l => l.title === m.title)
+        )];
+        setItems(combinedData);
       }
     } else {
-      setItems(mockItems);
+      const combinedData = [...liveItems, ...mockItems.filter(m => 
+        !liveItems.some(l => l.title === m.title)
+      )];
+      setItems(combinedData);
     }
     setIsLoaded(true);
   }, []);
@@ -220,8 +245,19 @@ export default function Home() {
   const projectHealth = useMemo(() => getProjectHealth(items), [items]);
   const commitments = useMemo(() => extractCommitments(items), [items]);
   const dailyDigest = useMemo(() => generateDailyDigest(items), [items]);
+  const urgentAlerts = useMemo(() => getUrgentAlerts(items), [items]);
+  const staleNudges = useMemo(() => getStaleNudges(items), [items]);
+  const waitingItems = useMemo(() => getWaitingItems(items), [items]);
 
   const overdueCount = commitments.filter(c => c.status === 'overdue').length;
+  const waitingOnMeCount = waitingItems.filter(w => w.direction === 'waiting_on_me').length;
+
+  // Check for imminent meeting and prep
+  const imminentMeeting = upcomingMeetings.find(m => m.minsUntil <= 30);
+  const imminentMeetingPrep = useMemo(() => {
+    if (!imminentMeeting) return null;
+    return generateMeetingPrep(items, imminentMeeting.item);
+  }, [imminentMeeting, items]);
 
   const handleTimeChange = useCallback((time: Date, isNow: boolean) => {
     setViewedTime(time);
@@ -479,6 +515,36 @@ export default function Home() {
     setSchedulingRequest(null);
   }, [schedulingRequest]);
 
+  const handleAlertDismiss = useCallback((alertId: string) => {
+    setDismissedAlerts(prev => new Set(prev).add(alertId));
+  }, []);
+
+  const handleAlertNavigate = useCallback((alert: { item?: MindItem; type: string }) => {
+    if (alert.item) {
+      setExpandedItem(alert.item);
+    } else if (alert.type === 'overdue_commitment') {
+      setViewMode('commitments');
+    } else if (alert.type === 'meeting_soon') {
+      setViewMode('meetings');
+    }
+  }, [setViewMode]);
+
+  const handleOpenMeetingPrep = useCallback(() => {
+    if (imminentMeetingPrep) {
+      setActiveMeetingPrep(imminentMeetingPrep);
+      setMeetingPrepOpen(true);
+    }
+  }, [imminentMeetingPrep]);
+
+  const handleRefreshLiveData = useCallback(() => {
+    // Refresh with live data
+    const combinedData = [...liveItems, ...mockItems.filter(m => 
+      !liveItems.some(l => l.title === m.title)
+    )];
+    setItems(combinedData);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(combinedData));
+  }, []);
+
   const handleUpdateItemTitle = useCallback((itemId: string, newTitle: string) => {
     setItems(prev => prev.map(item => 
       item.id === itemId ? { ...item, title: newTitle } : item
@@ -618,16 +684,31 @@ export default function Home() {
           <div className="flex-1" />
 
           {/* Contextual alerts - minimal */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            {/* Waiting on me indicator */}
+            {waitingOnMeCount > 0 && (
+              <button
+                onClick={() => setViewMode('focus')}
+                className="flex items-center gap-1 text-amber-400/80 text-xs font-mono hover:text-amber-400 transition-colors"
+                title={`${waitingOnMeCount} items waiting on you`}
+              >
+                <Zap size={10} />
+                {waitingOnMeCount}
+              </button>
+            )}
+            
+            {/* Meeting soon indicator */}
             {upcomingMeetings.length > 0 && upcomingMeetings[0].minsUntil <= 60 && (
               <button
-                onClick={() => setViewMode('meetings')}
+                onClick={handleOpenMeetingPrep}
                 className="flex items-center gap-1 text-green-400/80 text-xs font-mono hover:text-green-400 transition-colors"
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
                 {upcomingMeetings[0].minsUntil}m
               </button>
             )}
+            
+            {/* Overdue commitments indicator */}
             {overdueCount > 0 && (
               <button
                 onClick={() => setViewMode('commitments')}
@@ -637,6 +718,16 @@ export default function Home() {
                 {overdueCount}
               </button>
             )}
+
+            {/* Data source toggle */}
+            <button
+              onClick={handleRefreshLiveData}
+              className="flex items-center gap-1 text-white/30 text-xs font-mono hover:text-white/50 transition-colors"
+              title="Refresh with live data"
+            >
+              <Database size={10} />
+              <span className="hidden sm:inline">Live</span>
+            </button>
           </div>
         </div>
       </header>
@@ -840,6 +931,38 @@ export default function Home() {
         }}
         onSchedule={handleScheduleConfirm}
         parsedRequest={schedulingRequest}
+      />
+
+      {/* Meeting Prep Panel */}
+      <MeetingPrepPanel
+        prep={activeMeetingPrep}
+        isOpen={meetingPrepOpen}
+        onClose={() => {
+          setMeetingPrepOpen(false);
+          setActiveMeetingPrep(null);
+        }}
+        onItemClick={handleItemClick}
+      />
+
+      {/* Meeting Prep Banner - shows when meeting is imminent */}
+      <AnimatePresence>
+        {imminentMeeting && imminentMeeting.minsUntil <= 15 && !meetingPrepOpen && (
+          <MeetingPrepBanner
+            meeting={{
+              title: imminentMeeting.item.title,
+              attendees: imminentMeeting.attendees,
+            }}
+            minsUntil={imminentMeeting.minsUntil}
+            onView={handleOpenMeetingPrep}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Alert Bar - shows at bottom for urgent items */}
+      <AlertBar
+        alerts={urgentAlerts.filter(a => !dismissedAlerts.has(a.id))}
+        onDismiss={handleAlertDismiss}
+        onNavigate={handleAlertNavigate}
       />
 
     </main>

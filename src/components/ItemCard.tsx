@@ -15,6 +15,8 @@ import {
   Check,
   ArrowRight,
   MoreHorizontal,
+  Reply,
+  Zap,
 } from 'lucide-react';
 import { MindItem, ItemSource, SlackMeta, FigmaMeta, DriveMeta, WebMeta, ZoomMeta, CalendarMeta } from '@/lib/types';
 
@@ -106,9 +108,11 @@ interface ItemCardProps {
   onClick?: (item: MindItem) => void;
   onComplete?: (item: MindItem) => void;
   onDefer?: (item: MindItem) => void;
+  onQuickReply?: (item: MindItem) => void;
   isDragging?: boolean;
   isNew?: boolean;
   showActions?: boolean;
+  showWaitingBadge?: boolean;
 }
 
 export function ItemCard({ 
@@ -117,9 +121,11 @@ export function ItemCard({
   onClick, 
   onComplete,
   onDefer,
+  onQuickReply,
   isDragging = false, 
   isNew = false,
   showActions = true,
+  showWaitingBadge = false,
 }: ItemCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const Icon = sourceIcons[item.source];
@@ -127,6 +133,12 @@ export function ItemCard({
   const label = sourceLabels[item.source];
   const height = getCardHeight(item);
   const itemUrl = getItemUrl(item);
+  const isSlackItem = item.source === 'slack';
+  
+  // Check if this item has waiting-on-me language
+  const text = `${item.title} ${item.snippet || ''}`.toLowerCase();
+  const hasWaitingLanguage = showWaitingBadge || 
+    /waiting on you|can you|could you|need your|your thoughts|let me know|please review/i.test(text);
 
   const isEvent = item.source === 'calendar';
   const eventMeta = isEvent ? (item.sourceMeta.meta as { startsAt: string; attendees?: { name: string }[] }) : null;
@@ -197,6 +209,12 @@ export function ItemCard({
               NEW
             </motion.span>
           )}
+          {hasWaitingLanguage && !isNew && (
+            <span className="flex items-center gap-1 px-2 py-1 bg-amber-500/20 text-amber-400 text-[10px] font-mono rounded-full">
+              <Zap size={10} />
+              WAITING
+            </span>
+          )}
           {isImminent && !isNew && (
             <span className="flex items-center gap-1 px-2 py-1 bg-amber-500/20 text-amber-400 text-[10px] font-mono rounded-full">
               <Clock size={10} />
@@ -259,7 +277,22 @@ export function ItemCard({
             <div 
               className={`flex items-center gap-1 transition-opacity duration-150 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
             >
-              {itemUrl && (
+              {/* Quick reply for Slack items */}
+              {isSlackItem && itemUrl && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // Open in Slack to reply
+                    window.open(itemUrl, '_blank');
+                    onQuickReply?.(item);
+                  }}
+                  className="p-1.5 rounded-lg bg-white/5 hover:bg-pink-500/20 transition-colors group"
+                  title="Reply in Slack"
+                >
+                  <Reply size={12} className="text-white/50 group-hover:text-pink-400" />
+                </button>
+              )}
+              {itemUrl && !isSlackItem && (
                 <button
                   onClick={(e) => {
                     e.stopPropagation();

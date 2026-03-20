@@ -10,3 +10,5 @@ export { ProjectPulse } from './ProjectPulse';
 export { DailyDigest } from './DailyDigest';
 export { CommitmentTracker } from './CommitmentTracker';
 export { SchedulingModal } from './SchedulingModal';
+export { AlertBar, MeetingPrepBanner } from './AlertBar';
+export { MeetingPrepPanel } from './MeetingPrepPanel';

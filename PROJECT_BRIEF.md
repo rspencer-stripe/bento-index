@@ -186,14 +186,76 @@ Regex patterns detect self-commitments in messages:
 
 Commitments inherit the source item's project tag and become trackable items. Items >3 days old without completion surface as overdue.
 
-### Meeting Context
+### Meeting Prep Generation
 
-For each upcoming meeting, INDEX surfaces related items by:
-- Matching attendee names in item content
-- Matching project #tags
-- Recency to the meeting time
+For each upcoming meeting, INDEX automatically generates a prep package:
 
-Suggested topics are derived from open items related to attendees.
+**Context Surfacing:**
+- Related documents (same tag or mentions attendees)
+- Recent Slack conversations (last 7 days, related by tag or attendee)
+- Previous meeting notes (title pattern matching)
+
+**Extracted Insights:**
+- Open questions (? patterns in related items)
+- Suggested discussion topics (from high-priority related items)
+
+**Person Context:**
+For each attendee:
+- Recent interactions (items mentioning them)
+- Pending items (high priority or "waiting" language)
+- Last contact date
+
+### Stale Item Nudges
+
+Items that need attention are surfaced based on:
+- High priority (≥4) items untouched for 3+ days
+- Medium priority items untouched for 10+ days
+- Items with "waiting" or "blocked" language
+
+Each nudge includes:
+- Days since last touch
+- Reason for surfacing
+- Suggested action (archive, follow up, reschedule, delegate)
+- Related active items in same project
+
+### Cross-Item Relationships
+
+Automatic relationship detection with strength scoring (0-1):
+
+| Relationship Type | Signal | Strength |
+|------------------|--------|----------|
+| same_project | Matching #tag | +0.4 |
+| same_person | Shared name mentions | +0.3 per name |
+| temporal | Touched within 2 hours | +0.2 |
+| same_topic | 2+ shared keywords | +0.15 per keyword |
+| reference | Shared URL | +0.5 |
+
+Relationships with strength ≥0.3 are surfaced.
+
+### Waiting Detection
+
+Pattern matching identifies items where action is needed:
+
+**Waiting On Me:**
+- "waiting on you", "can you", "could you"
+- "need your", "your thoughts", "let me know"
+- "please review", "for your review", "awaiting your"
+
+**Waiting On Others:**
+- "waiting on [person]", "blocked by"
+- "pending from", "waiting for"
+
+Items include urgency level (high/medium/low) based on priority and age.
+
+### Urgent Alerts
+
+Real-time alert generation for:
+- Meetings in next 30 minutes (critical if ≤10 min)
+- High-urgency waiting items (someone waiting on you)
+- Overdue commitments (>3 days old)
+- Critical stale items (P5, untouched 3+ days)
+
+Alerts include severity, action button, and related item reference.
 
 ### Project Health
 
@@ -282,30 +344,93 @@ Data ingestion uses MCP (Model Context Protocol). Each source has a correspondin
 ## Current State
 
 ### What's Working
+
+**Core Architecture**
 - Six-view architecture with consistent design language
-- Intelligence layer with priority scoring and commitment extraction
-- Timeline with two modes: Stream (scroll-based) and Day (date-filtered)
+- Intelligence layer with priority scoring, commitment extraction, and relationship mapping
+- localStorage persistence with version-based refresh
+- Keyboard shortcuts (1-6) for view switching
+
+**Timeline**
+- Two modes: Stream (scroll-based) and Day (date-filtered)
 - Fixed "now" line that responds to scroll position (green/pulsing → red/time offset)
 - Day view with intelligent item surfacing (recency + priority, not just date)
-- Meeting companion with context surfacing
-- Projects view with filters (Active/Needs Attention/Hidden) and sorting
-- OmniBar with hashtag detection and natural language scheduling
-- Scheduling modal with smart time slot suggestions
-- Item actions: Complete (remove), Defer (move to tomorrow), Open (source link)
+- Item actions: Complete, Defer, Open, Quick Reply (for Slack)
 - Stable card heights (no layout shift on hover)
 - Drag-to-trash for item deletion
-- Keyboard shortcuts (1-6) for view switching
-- localStorage persistence with version-based refresh
+
+**Live Data Integration**
+- Real calendar events fetched via Google Calendar MCP
+- Real Slack messages fetched via Slack MCP
+- Real Google Drive documents fetched via Drive MCP
+- Combined live + mock data for complete context
+
+**Smarter Intelligence**
+- **Meeting Prep**: Auto-generated context for upcoming meetings
+  - Related documents by tag and attendee
+  - Recent conversations with attendees
+  - Open questions extracted from related items
+  - Suggested discussion topics
+  - Person context (recent interactions, pending items)
+- **Stale Item Nudges**: Detection of items needing attention
+  - High priority items untouched for 3+ days
+  - Suggested actions (follow up, archive, delegate)
+- **Cross-Item Relationships**: Automatic relationship detection
+  - Same project/tag
+  - Shared people mentions
+  - Temporal proximity
+  - Topic/keyword overlap
+  - URL/document references
+- **Waiting Detection**: Items where someone is waiting on you
+  - Pattern matching for waiting language
+  - "WAITING" badge on relevant cards
+
+**Notification Layer**
+- **Alert Bar**: Floating alerts at bottom of screen
+  - Meeting soon alerts (with prep button)
+  - Overdue commitment warnings
+  - Waiting response alerts
+  - Stale high-priority item notifications
+  - Severity levels: critical (red), warning (amber), info (blue)
+  - Dismissable with carousel for multiple alerts
+- **Meeting Prep Banner**: Top banner for imminent meetings (≤15 min)
+  - Shows meeting title, attendees, time until
+  - One-click access to meeting prep panel
+- **Header Indicators**
+  - Waiting-on-me count (⚡)
+  - Next meeting countdown (when ≤60 min)
+  - Overdue commitments count
+  - Live data refresh button
+
+**Two-Way Actions**
+- **Natural Language Scheduling**: "Schedule 30 minutes with Katie Koch"
+  - Parser extracts person and duration
+  - Scheduling modal with suggested time slots
+  - Creates calendar event on confirmation
+- **Quick Slack Replies**: Reply button on Slack items
+  - Opens thread in Slack
+  - Designed for future inline reply support
+
+**Meeting Prep Panel**
+- Full-screen slide-out panel for meeting context
+- Sections: Attendees, People Context, Open Questions, Suggested Topics
+- Related Documents and Recent Conversations (clickable)
+- Previous meeting notes link
+- AI-generated badge indicating auto-synthesis
+
+**Other Views**
+- Meeting companion with context surfacing
+- Projects view with filters (Active/Needs Attention/Hidden) and sorting
+- OmniBar with hashtag detection and scheduling
 
 ### Near-Term Focus
-- Live MCP data fetching (currently using representative mock data)
-- Google Calendar API integration for real scheduling (OAuth + free/busy lookup)
+- Inline quick replies without leaving INDEX
+- OAuth flow for real-time calendar event creation
+- Deeper thread context fetching for Slack
 - Status tracking (inbox → in progress → done)
-- Relationship mapping between items
-- Thread context fetching for richer Slack integration
 
 ### Longer-Term Vision
-- Claude-powered semantic routing for OmniBar (natural language → structured action)
+- Claude-powered semantic routing for OmniBar
 - Quick reply templates for common responses
 - Focus session timer with distraction blocking
 - Impact Mode: filter to only authoring actions (for performance reviews)

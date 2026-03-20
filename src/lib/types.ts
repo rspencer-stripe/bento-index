@@ -20,7 +20,7 @@ export type TileSize = 'large' | 'medium' | 'small';
 
 export type Priority = 1 | 2 | 3 | 4 | 5;
 
-export type EventType = 'oneOnOne' | 'crit' | 'standup' | 'external' | 'focus';
+export type EventType = 'oneOnOne' | 'crit' | 'standup' | 'external' | 'focus' | 'allHands';
 
 // Source-Specific Metadata
 

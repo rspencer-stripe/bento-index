@@ -79,7 +79,7 @@ const katieRelatedItems: MindItem[] = [
       meta: {
         fileName: 'Radar Overview - v3 explorations',
         lastModified: daysAgo(1),
-        desktopUrl: 'figma://file/abc123',
+        desktopUrl: 'https://www.figma.com/design/nK1L2F9di4rFXvH3wJXBNM/Radar-Overview',
       },
     },
     createdAt: daysAgo(3),
@@ -337,7 +337,7 @@ const timelineItems: MindItem[] = [
         docTitle: 'Radar User Research Findings',
         executiveSummary: 'User research summary for Radar redesign',
         lastEditors: [{ name: 'Katie Koch', editedAt: daysAgo(3) }],
-        webUrl: 'https://docs.google.com/document/d/1abc123/edit',
+        webUrl: 'https://docs.google.com/document/d/1kN_F70CgKP8WYHK_EGyJVgfHChPGkHLkObppLwVQOK8/edit',
       },
     },
     createdAt: daysAgo(5),
@@ -377,7 +377,7 @@ const timelineItems: MindItem[] = [
       meta: {
         fileName: 'Disputes Flow Redesign',
         lastModified: daysAgo(2),
-        desktopUrl: 'figma://file/disputes123',
+        desktopUrl: 'https://www.figma.com/design/pQ3V2F8di4rFXvH3wJXBNM/Smart-Disputes',
       },
     },
     createdAt: daysAgo(10),
@@ -405,7 +405,7 @@ const projectItems: MindItem[] = [
       meta: {
         fileName: 'Radar Overview - v3 explorations',
         lastModified: hoursAgo(1),
-        desktopUrl: 'figma://file/abc123',
+        desktopUrl: 'https://www.figma.com/design/nK1L2F9di4rFXvH3wJXBNM/Radar-Overview',
       },
     },
     createdAt: daysAgo(7),
@@ -535,7 +535,7 @@ const todayItems: MindItem[] = [
       meta: {
         fileName: 'Radar Component Library',
         lastModified: hoursAgo(3),
-        desktopUrl: 'figma://file/components123',
+        desktopUrl: 'https://www.figma.com/design/rK1L2F9di4rFXvH3wJXBNM/Radar-Components',
       },
     },
     createdAt: daysAgo(60),

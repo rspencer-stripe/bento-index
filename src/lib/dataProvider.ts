@@ -1,5 +1,6 @@
 import { MindItem } from './types';
 import { liveItems } from './liveData';
+import { realItems } from './realData';
 
 export type DataMode = 'demo' | 'live';
 
@@ -23,28 +24,16 @@ export function toggleDataMode(): DataMode {
   return next;
 }
 
-// Demo data - always available
+// Demo data - curated demo scenarios
 export function getDemoItems(): MindItem[] {
   return liveItems;
 }
 
-// Live data fetching - uses the sync API
+// Live data - real data from MCP (refreshed periodically)
 export async function fetchLiveItems(): Promise<MindItem[]> {
-  try {
-    const res = await fetch('/api/sync', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ mode: 'live', sources: ['all'] }),
-    });
-    
-    if (!res.ok) return [];
-    
-    const data = await res.json();
-    return data.items || [];
-  } catch (error) {
-    console.error('Failed to fetch live data:', error);
-    return [];
-  }
+  // Return real data fetched via MCP
+  // This data is updated when you run the agent to refresh it
+  return realItems;
 }
 
 // Legacy individual fetch functions (still work for backward compatibility)

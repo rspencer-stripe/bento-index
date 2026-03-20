@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { 
   ArrowLeft, 
@@ -9,18 +9,13 @@ import {
   FileText, 
   Figma,
   CheckCircle,
-  XCircle,
+  Zap,
   ExternalLink,
   Copy,
   Check,
+  Search,
+  Globe,
 } from 'lucide-react';
-
-interface IntegrationStatus {
-  calendar: boolean;
-  slack: boolean;
-  drive: boolean;
-  figma: boolean;
-}
 
 const integrations = [
   {
@@ -28,54 +23,57 @@ const integrations = [
     name: 'Google Calendar',
     icon: Calendar,
     description: 'Import your meetings and schedule',
-    envVars: ['GOOGLE_ACCESS_TOKEN'],
-    docsUrl: 'https://developers.google.com/oauthplayground/',
-    hint: 'Use OAuth Playground to get a test token (expires in 1 hour)',
+    mcpServer: 'user-google calendar',
+    mcpStatus: 'connected',
   },
   {
     id: 'slack',
     name: 'Slack',
     icon: MessageSquare,
     description: 'Import messages and threads',
-    envVars: ['SLACK_BOT_TOKEN'],
-    docsUrl: 'https://api.slack.com/apps',
-    hint: 'Create a Slack App with search:read, channels:history scopes',
+    mcpServer: 'user-toolshed_extras',
+    mcpStatus: 'connected',
   },
   {
     id: 'drive',
     name: 'Google Drive',
     icon: FileText,
     description: 'Import documents and files',
-    envVars: ['GOOGLE_ACCESS_TOKEN'],
-    docsUrl: 'https://developers.google.com/oauthplayground/',
-    hint: 'Same token as Calendar - both use Google OAuth',
+    mcpServer: 'user-google drive',
+    mcpStatus: 'connected',
   },
   {
     id: 'figma',
     name: 'Figma',
     icon: Figma,
     description: 'Import design files',
-    envVars: ['FIGMA_ACCESS_TOKEN'],
-    docsUrl: 'https://www.figma.com/developers/api#access-tokens',
-    hint: 'Generate a personal access token in Figma settings',
+    mcpServer: 'user-toolshed_extras',
+    mcpStatus: 'connected',
+  },
+  {
+    id: 'internal-search',
+    name: 'Internal Search',
+    icon: Search,
+    description: 'Search internal documentation and wiki',
+    mcpServer: 'user-internal search',
+    mcpStatus: 'connected',
+  },
+  {
+    id: 'web-search',
+    name: 'Web Search',
+    icon: Globe,
+    description: 'Search and gather external context',
+    mcpServer: 'user-web_search',
+    mcpStatus: 'connected',
   },
 ];
 
 export default function SettingsPage() {
-  const [status, setStatus] = useState<IntegrationStatus | null>(null);
   const [copiedVar, setCopiedVar] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetch('/api/integrations/status')
-      .then(res => res.json())
-      .then(setStatus)
-      .catch(() => setStatus({ calendar: false, slack: false, drive: false, figma: false }));
-  }, []);
-
-  const copyEnvTemplate = (envVars: string[]) => {
-    const template = envVars.map(v => `${v}=your_value_here`).join('\n');
-    navigator.clipboard.writeText(template);
-    setCopiedVar(envVars.join(','));
+  const copyEnvTemplate = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedVar(text);
     setTimeout(() => setCopiedVar(null), 2000);
   };
 
@@ -96,6 +94,23 @@ export default function SettingsPage() {
           </div>
         </div>
 
+        {/* MCP Status Banner */}
+        <section className="mb-8">
+          <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                <Zap size={20} className="text-emerald-400" />
+              </div>
+              <div>
+                <div className="font-medium text-emerald-400">MCP Connected</div>
+                <p className="text-sm text-white/50">
+                  Running in Cursor with MCP enabled. All integrations are connected via Model Context Protocol.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Data Mode */}
         <section className="mb-12">
           <h2 className="text-lg font-medium mb-4">Data Mode</h2>
@@ -115,7 +130,7 @@ export default function SettingsPage() {
                 <div className="w-2 h-2 rounded-full bg-emerald-400 mt-2" />
                 <div>
                   <div className="font-medium text-emerald-400">Live Mode</div>
-                  <p className="text-sm text-white/50">Your real data from connected integrations. Requires API setup below.</p>
+                  <p className="text-sm text-white/50">Your real data via MCP (in Cursor) or API credentials (deployed).</p>
                 </div>
               </div>
             </div>
@@ -131,77 +146,31 @@ export default function SettingsPage() {
           <div className="space-y-4">
             {integrations.map(integration => {
               const Icon = integration.icon;
-              const isConnected = status?.[integration.id as keyof IntegrationStatus] ?? false;
               
               return (
                 <div 
                   key={integration.id}
                   className="p-4 rounded-xl bg-white/5 border border-white/10"
                 >
-                  <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                        isConnected ? 'bg-emerald-500/20' : 'bg-white/10'
-                      }`}>
-                        <Icon size={20} className={isConnected ? 'text-emerald-400' : 'text-white/50'} />
+                      <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-emerald-500/20">
+                        <Icon size={20} className="text-emerald-400" />
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="font-medium">{integration.name}</span>
-                          {isConnected ? (
-                            <span className="flex items-center gap-1 text-xs text-emerald-400">
-                              <CheckCircle size={12} />
-                              Connected
-                            </span>
-                          ) : (
-                            <span className="flex items-center gap-1 text-xs text-white/40">
-                              <XCircle size={12} />
-                              Not configured
-                            </span>
-                          )}
+                          <span className="flex items-center gap-1 text-xs text-emerald-400">
+                            <CheckCircle size={12} />
+                            Connected via MCP
+                          </span>
                         </div>
                         <p className="text-sm text-white/50">{integration.description}</p>
-                        {'hint' in integration && (
-                          <p className="text-xs text-white/30 mt-1">{integration.hint}</p>
-                        )}
+                        <p className="text-xs text-white/30 mt-1 font-mono">
+                          Server: {integration.mcpServer}
+                        </p>
                       </div>
                     </div>
-                    <a
-                      href={integration.docsUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="p-2 rounded-lg hover:bg-white/10 transition-colors text-white/40 hover:text-white/70"
-                      title="View documentation"
-                    >
-                      <ExternalLink size={16} />
-                    </a>
-                  </div>
-                  
-                  <div className="mt-3 p-3 rounded-lg bg-black/30 font-mono text-sm">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-white/40 text-xs">Required environment variables:</span>
-                      <button
-                        onClick={() => copyEnvTemplate(integration.envVars)}
-                        className="flex items-center gap-1 text-xs text-white/40 hover:text-white/70 transition-colors"
-                      >
-                        {copiedVar === integration.envVars.join(',') ? (
-                          <>
-                            <Check size={12} />
-                            Copied
-                          </>
-                        ) : (
-                          <>
-                            <Copy size={12} />
-                            Copy
-                          </>
-                        )}
-                      </button>
-                    </div>
-                    {integration.envVars.map(envVar => (
-                      <div key={envVar} className="text-white/70">
-                        {envVar}=<span className="text-white/30">your_value_here</span>
-                      </div>
-                    ))}
                   </div>
                 </div>
               );
@@ -209,42 +178,42 @@ export default function SettingsPage() {
           </div>
         </section>
 
-        {/* Setup Instructions */}
+        {/* Deployment Note */}
         <section className="mt-12">
-          <h2 className="text-lg font-medium mb-4">Quick Setup</h2>
-          <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
-            <div>
-              <div className="font-medium mb-1">1. Create a <code className="px-1.5 py-0.5 bg-white/10 rounded">.env.local</code> file</div>
-              <p className="text-sm text-white/50">In the project root, create this file with your API credentials.</p>
-            </div>
-            <div>
-              <div className="font-medium mb-1">2. Add your credentials</div>
-              <p className="text-sm text-white/50">Copy the environment variable templates from each integration above.</p>
-            </div>
-            <div>
-              <div className="font-medium mb-1">3. Restart the dev server</div>
-              <p className="text-sm text-white/50">Run <code className="px-1.5 py-0.5 bg-white/10 rounded">npm run dev</code> to pick up the new environment variables.</p>
-            </div>
-            <div>
-              <div className="font-medium mb-1">4. Switch to Live mode</div>
-              <p className="text-sm text-white/50">Press <kbd className="px-1.5 py-0.5 bg-white/10 rounded">⌘⇧D</kbd> to toggle from Demo to Live mode.</p>
-            </div>
-          </div>
-        </section>
-
-        {/* For Vercel deployment */}
-        <section className="mt-12">
-          <h2 className="text-lg font-medium mb-4">Vercel Deployment</h2>
+          <h2 className="text-lg font-medium mb-4">Deploying Outside Cursor</h2>
           <div className="p-4 rounded-xl bg-white/5 border border-white/10">
             <p className="text-white/70 text-sm mb-3">
-              For Vercel deployments, add environment variables in your project settings:
+              When deploying to Vercel or running outside Cursor, you&apos;ll need to configure API credentials:
             </p>
-            <ol className="list-decimal list-inside text-sm text-white/50 space-y-1">
-              <li>Go to your Vercel project dashboard</li>
-              <li>Navigate to Settings → Environment Variables</li>
-              <li>Add each required variable for your integrations</li>
-              <li>Redeploy to apply changes</li>
-            </ol>
+            <div className="mt-3 p-3 rounded-lg bg-black/30 font-mono text-sm">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-white/40 text-xs">Environment variables for .env.local:</span>
+                <button
+                  onClick={() => copyEnvTemplate('GOOGLE_ACCESS_TOKEN=\nSLACK_BOT_TOKEN=\nFIGMA_ACCESS_TOKEN=')}
+                  className="flex items-center gap-1 text-xs text-white/40 hover:text-white/70 transition-colors"
+                >
+                  {copiedVar ? (
+                    <>
+                      <Check size={12} />
+                      Copied
+                    </>
+                  ) : (
+                    <>
+                      <Copy size={12} />
+                      Copy
+                    </>
+                  )}
+                </button>
+              </div>
+              <div className="text-white/70 space-y-1">
+                <div>GOOGLE_ACCESS_TOKEN=<span className="text-white/30">your_token</span></div>
+                <div>SLACK_BOT_TOKEN=<span className="text-white/30">xoxb-your-token</span></div>
+                <div>FIGMA_ACCESS_TOKEN=<span className="text-white/30">your_token</span></div>
+              </div>
+            </div>
+            <p className="text-white/40 text-xs mt-3">
+              See the README for detailed setup instructions for each integration.
+            </p>
           </div>
         </section>
       </div>

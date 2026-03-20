@@ -112,6 +112,10 @@ function getItemUrl(item: MindItem): string | null {
       return (sourceMeta.meta as WebMeta).url || null;
     case 'zoom':
       return (sourceMeta.meta as ZoomMeta).recordingUrl || null;
+    case 'calendar':
+      // Return zoom link if available for calendar events
+      const calMeta = sourceMeta.meta as { zoomLink?: string };
+      return calMeta.zoomLink || null;
     default:
       return null;
   }
@@ -137,7 +141,7 @@ function getItemThumbnail(item: MindItem): string | null {
 
 const STORAGE_KEY = 'index-items';
 const STORAGE_VERSION_KEY = 'index-version';
-const CURRENT_VERSION = '18'; // Exclude mock calendar events to show Katie 1:1
+const CURRENT_VERSION = '20'; // Added Google Drive docs to live mode
 
 const validViewModes: ViewMode[] = ['timeline', 'focus', 'meetings', 'projects', 'digest', 'commitments'];
 

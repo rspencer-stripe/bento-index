@@ -66,7 +66,8 @@ function getItemUrl(item: MindItem): string | null {
     case 'zoom':
       return (sourceMeta.meta as ZoomMeta).recordingUrl || null;
     case 'calendar':
-      return null;
+      // Return zoom link if available
+      return (sourceMeta.meta as CalendarMeta).zoomLink || null;
     default:
       return null;
   }

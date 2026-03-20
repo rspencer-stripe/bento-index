@@ -2,14 +2,70 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Command, Sparkles, Loader2 } from 'lucide-react';
+import { Command, Sparkles, Loader2, Calendar } from 'lucide-react';
+
+export interface SchedulingRequest {
+  person: string;
+  duration: number;
+  title?: string;
+}
 
 interface OmniBarProps {
   onSubmit: (input: string) => Promise<{ feedback: string } | void>;
+  onScheduleRequest?: (request: SchedulingRequest) => void;
   isProcessing?: boolean;
 }
 
-export function OmniBar({ onSubmit, isProcessing = false }: OmniBarProps) {
+function parseSchedulingIntent(input: string): SchedulingRequest | null {
+  const lowerInput = input.toLowerCase();
+  
+  // Detect scheduling intent
+  const schedulePatterns = [
+    /schedule\s+(\d+)\s*(?:min(?:ute)?s?)?\s+(?:with|meeting\s+with)\s+(.+)/i,
+    /schedule\s+(?:a\s+)?(?:call|meeting|sync)\s+with\s+(.+?)(?:\s+for\s+(\d+)\s*(?:min(?:ute)?s?)?)?/i,
+    /(?:book|set\s+up)\s+(?:a\s+)?(\d+)\s*(?:min(?:ute)?s?)?\s+(?:with|meeting\s+with)\s+(.+)/i,
+    /(?:book|set\s+up)\s+(?:a\s+)?(?:call|meeting|sync)\s+with\s+(.+?)(?:\s+for\s+(\d+)\s*(?:min(?:ute)?s?)?)?/i,
+    /meet\s+(?:with\s+)?(.+?)\s+for\s+(\d+)\s*(?:min(?:ute)?s?)?/i,
+  ];
+  
+  for (const pattern of schedulePatterns) {
+    const match = input.match(pattern);
+    if (match) {
+      // Extract person and duration based on capture groups
+      let person: string;
+      let duration: number;
+      
+      if (match[1] && !isNaN(parseInt(match[1]))) {
+        // Pattern: "schedule 30 min with Person"
+        duration = parseInt(match[1]);
+        person = match[2]?.trim() || '';
+      } else if (match[2] && !isNaN(parseInt(match[2]))) {
+        // Pattern: "schedule meeting with Person for 30 min"
+        person = match[1]?.trim() || '';
+        duration = parseInt(match[2]);
+      } else {
+        // Pattern: "schedule meeting with Person" (default 30 min)
+        person = match[1]?.trim() || match[2]?.trim() || '';
+        duration = 30;
+      }
+      
+      if (person) {
+        // Clean up person name
+        person = person.replace(/[.,!?]$/, '').trim();
+        // Capitalize each word
+        person = person.split(' ')
+          .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+          .join(' ');
+        
+        return { person, duration };
+      }
+    }
+  }
+  
+  return null;
+}
+
+export function OmniBar({ onSubmit, onScheduleRequest, isProcessing = false }: OmniBarProps) {
   const [value, setValue] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -38,6 +94,14 @@ export function OmniBar({ onSubmit, isProcessing = false }: OmniBarProps) {
     e.preventDefault();
     if (!value.trim() || isProcessing) return;
 
+    // Check for scheduling intent
+    const schedulingRequest = parseSchedulingIntent(value);
+    if (schedulingRequest && onScheduleRequest) {
+      onScheduleRequest(schedulingRequest);
+      setValue('');
+      return;
+    }
+
     const result = await onSubmit(value);
     if (result?.feedback) {
       setFeedback(result.feedback);
@@ -50,6 +114,8 @@ export function OmniBar({ onSubmit, isProcessing = false }: OmniBarProps) {
     return matches || [];
   };
 
+  // Detect if current input looks like a scheduling request
+  const schedulingPreview = parseSchedulingIntent(value);
   const hashtags = detectHashtags(value);
 
   return (
@@ -80,7 +146,16 @@ export function OmniBar({ onSubmit, isProcessing = false }: OmniBarProps) {
           "
         />
 
-        {hashtags.length > 0 && (
+        {schedulingPreview && (
+          <div className="flex items-center gap-1.5 px-2 py-1 bg-emerald-500/10 rounded-lg">
+            <Calendar size={12} className="text-emerald-400" />
+            <span className="text-[10px] font-mono text-emerald-400">
+              {schedulingPreview.duration}m with {schedulingPreview.person}
+            </span>
+          </div>
+        )}
+
+        {!schedulingPreview && hashtags.length > 0 && (
           <div className="flex items-center gap-1">
             {hashtags.slice(0, 2).map((tag) => (
               <span

@@ -31,7 +31,9 @@ import {
   ProjectPulse,
   DailyDigest,
   CommitmentTracker,
+  SchedulingModal,
 } from '@/components';
+import type { SchedulingRequest } from '@/components/OmniBar';
 import { mockItems } from '@/lib/mockData';
 import { MindItem } from '@/lib/types';
 import {
@@ -123,7 +125,7 @@ function getItemThumbnail(item: MindItem): string | null {
 
 const STORAGE_KEY = 'index-items';
 const STORAGE_VERSION_KEY = 'index-version';
-const CURRENT_VERSION = '9'; // Bump this to force refresh
+const CURRENT_VERSION = '10'; // Bump this to force refresh
 
 const validViewModes: ViewMode[] = ['timeline', 'focus', 'meetings', 'projects', 'digest', 'commitments'];
 
@@ -138,6 +140,8 @@ export default function Home() {
   const [viewedTime, setViewedTime] = useState(new Date());
   const [isViewingNow, setIsViewingNow] = useState(true);
   const [newlyAddedId, setNewlyAddedId] = useState<string | null>(null);
+  const [schedulingModalOpen, setSchedulingModalOpen] = useState(false);
+  const [schedulingRequest, setSchedulingRequest] = useState<SchedulingRequest | null>(null);
 
   // Get view mode from URL, default to 'focus'
   const viewParam = searchParams.get('view');
@@ -432,6 +436,49 @@ export default function Home() {
     ));
   }, []);
 
+  const handleScheduleRequest = useCallback((request: SchedulingRequest) => {
+    setSchedulingRequest(request);
+    setSchedulingModalOpen(true);
+  }, []);
+
+  const handleScheduleConfirm = useCallback((slot: { date: string; startTime: string; endTime: string; dateLabel: string; timeLabel: string }, title: string) => {
+    // Create a new calendar item for the scheduled meeting
+    const [year, month, day] = slot.date.split('-').map(Number);
+    const [startHour, startMin] = slot.startTime.split(':').map(Number);
+    const [endHour, endMin] = slot.endTime.split(':').map(Number);
+    
+    const startDate = new Date(year, month - 1, day, startHour, startMin);
+    const endDate = new Date(year, month - 1, day, endHour, endMin);
+    
+    const newItem: MindItem = {
+      id: `cal-scheduled-${Date.now()}`,
+      tag: '#Meeting',
+      type: 'event',
+      priority: 4,
+      title: title,
+      snippet: `Scheduled via INDEX • ${slot.dateLabel} at ${slot.timeLabel}`,
+      source: 'calendar',
+      sourceMeta: {
+        source: 'calendar',
+        meta: {
+          eventType: 'meeting',
+          startsAt: startDate.toISOString(),
+          endsAt: endDate.toISOString(),
+          tetheredArtifacts: [],
+          attendees: schedulingRequest ? [{ name: `${schedulingRequest.person.toLowerCase().replace(/\s+/g, '')}@stripe.com` }] : [],
+        },
+      },
+      createdAt: new Date().toISOString(),
+      lastTouchedAt: new Date().toISOString(),
+    };
+    
+    setItems(prev => [newItem, ...prev]);
+    setNewlyAddedId(newItem.id);
+    setTimeout(() => setNewlyAddedId(null), 3000);
+    setSchedulingModalOpen(false);
+    setSchedulingRequest(null);
+  }, [schedulingRequest]);
+
   const handleUpdateItemTitle = useCallback((itemId: string, newTitle: string) => {
     setItems(prev => prev.map(item => 
       item.id === itemId ? { ...item, title: newTitle } : item
@@ -563,6 +610,7 @@ export default function Home() {
           {/* OmniBar - Left aligned after modes */}
           <OmniBar 
             onSubmit={handleOmniBarSubmit}
+            onScheduleRequest={handleScheduleRequest}
             isProcessing={isProcessing}
           />
 
@@ -782,6 +830,17 @@ export default function Home() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Scheduling Modal */}
+      <SchedulingModal
+        isOpen={schedulingModalOpen}
+        onClose={() => {
+          setSchedulingModalOpen(false);
+          setSchedulingRequest(null);
+        }}
+        onSchedule={handleScheduleConfirm}
+        parsedRequest={schedulingRequest}
+      />
 
     </main>
   );

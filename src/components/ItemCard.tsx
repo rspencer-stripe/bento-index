@@ -142,23 +142,19 @@ export function ItemCard({
 
   return (
     <motion.div
-      layout
-      layoutId={item.id}
-      initial={isNew ? { opacity: 0, scale: 0.8, y: -20 } : { opacity: 0, y: 20 }}
+      initial={isNew ? { opacity: 0, scale: 0.95 } : false}
       animate={{ 
         opacity, 
-        y: 0, 
         scale: 1,
         boxShadow: isNew ? '0 0 30px rgba(99, 102, 241, 0.4)' : '0 0 0px rgba(99, 102, 241, 0)',
       }}
       whileHover={{ 
-        scale: isDragging ? 1 : 1.02,
-        opacity: isDragging ? opacity : Math.min(opacity + 0.1, 1),
+        scale: isDragging ? 1 : 1.01,
+        opacity: isDragging ? opacity : Math.min(opacity + 0.05, 1),
       }}
       transition={{
-        type: 'spring',
-        stiffness: 400,
-        damping: 30,
+        duration: 0.15,
+        ease: 'easeOut',
         boxShadow: { duration: 1.5, ease: 'easeOut' },
       }}
       onClick={() => !isDragging && onClick?.(item)}
@@ -258,12 +254,10 @@ export function ItemCard({
         </div>
         
         <div className="flex items-center gap-2">
-          {/* Action buttons - show on hover */}
-          {showActions && isHovered && (
-            <motion.div 
-              initial={{ opacity: 0, x: 10 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="flex items-center gap-1"
+          {/* Action buttons - always present, opacity changes on hover */}
+          {showActions && (
+            <div 
+              className={`flex items-center gap-1 transition-opacity duration-150 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
             >
               {itemUrl && (
                 <button
@@ -277,7 +271,7 @@ export function ItemCard({
                   <ExternalLink size={12} className="text-white/50" />
                 </button>
               )}
-              {onDefer && (
+              {onDefer && item.source !== 'calendar' && (
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -301,7 +295,7 @@ export function ItemCard({
                   <Check size={12} className="text-white/50 group-hover:text-green-400" />
                 </button>
               )}
-            </motion.div>
+            </div>
           )}
           <span className="text-[10px] font-mono text-white/20">
             {formatRelativeTime(item.lastTouchedAt)}

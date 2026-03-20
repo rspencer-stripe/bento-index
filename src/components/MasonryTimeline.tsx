@@ -397,23 +397,14 @@ export function MasonryTimeline({ items, onItemClick, onTimeChange, onItemDelete
       >
         {columnItems.map((column, colIndex) => (
           <div key={colIndex} className="flex flex-col gap-3">
-            <AnimatePresence mode="sync">
+            <>
               {column.map(({ item, opacity }) => (
-                <motion.div
+                <div
                   key={item.id}
-                  initial={{ opacity: 0 }}
-                  animate={{ 
-                    opacity: draggedItemId === item.id ? 0.5 : opacity, 
-                    scale: draggedItemId === item.id ? 0.98 : 1,
-                  }}
-                  exit={{ opacity: 0 }}
-                  transition={{
-                    duration: 0.15,
-                    ease: 'easeOut',
-                  }}
                   draggable
-                  onDragStart={(e) => handleDragStart(e as unknown as React.DragEvent, item.id)}
+                  onDragStart={(e) => handleDragStart(e, item.id)}
                   onDragEnd={handleDragEnd}
+                  style={{ opacity: draggedItemId === item.id ? 0.5 : 1 }}
                 >
                   <ItemCard
                     item={item}
@@ -424,9 +415,9 @@ export function MasonryTimeline({ items, onItemClick, onTimeChange, onItemDelete
                     isDragging={draggedItemId === item.id}
                     isNew={item.id === newlyAddedId}
                   />
-                </motion.div>
+                </div>
               ))}
-            </AnimatePresence>
+            </>
           </div>
         ))}
       </div>

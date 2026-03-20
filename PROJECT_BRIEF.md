@@ -236,7 +236,16 @@ Every card, regardless of view, follows the same structure:
 ## Interaction Principles
 
 ### OmniBar as Universal Input
-One input for everything: notes, tasks, URLs, searches. Press ⌘K to focus. Hashtags detected inline for project assignment. Items route to the current timeline position.
+One input for everything: notes, tasks, URLs, searches, and scheduling. Press ⌘K to focus.
+
+**Capabilities:**
+- **Notes/Tasks**: Type text, optionally with #hashtags for project assignment
+- **URLs**: Paste links to capture as web items
+- **Scheduling**: Natural language like "Schedule 30 minutes with Katie Koch"
+  - Detects person name and duration
+  - Shows green preview badge while typing
+  - Opens scheduling modal with suggested time slots
+  - Creates calendar event on confirmation
 
 ### Hover to Reveal
 Actions (open, complete, dismiss) appear on hover. The default state is clean; interaction reveals capability. This keeps the interface scannable while maintaining full functionality.
@@ -280,14 +289,17 @@ Data ingestion uses MCP (Model Context Protocol). Each source has a correspondin
 - Day view with intelligent item surfacing (recency + priority, not just date)
 - Meeting companion with context surfacing
 - Projects view with filters (Active/Needs Attention/Hidden) and sorting
-- OmniBar with hashtag detection
+- OmniBar with hashtag detection and natural language scheduling
+- Scheduling modal with smart time slot suggestions
 - Item actions: Complete (remove), Defer (move to tomorrow), Open (source link)
+- Stable card heights (no layout shift on hover)
 - Drag-to-trash for item deletion
 - Keyboard shortcuts (1-6) for view switching
 - localStorage persistence with version-based refresh
 
 ### Near-Term Focus
 - Live MCP data fetching (currently using representative mock data)
+- Google Calendar API integration for real scheduling (OAuth + free/busy lookup)
 - Status tracking (inbox → in progress → done)
 - Relationship mapping between items
 - Thread context fetching for richer Slack integration

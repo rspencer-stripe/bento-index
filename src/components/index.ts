@@ -9,3 +9,4 @@ export { WhatsNext } from './WhatsNext';
 export { ProjectPulse } from './ProjectPulse';
 export { DailyDigest } from './DailyDigest';
 export { CommitmentTracker } from './CommitmentTracker';
+export { SchedulingModal } from './SchedulingModal';

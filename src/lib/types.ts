@@ -63,6 +63,8 @@ export interface CalendarMeta {
     name: string;
     avatarUrl?: string;
   }>;
+  zoomLink?: string;
+  location?: string;
 }
 
 export interface WebMeta {

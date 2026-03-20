@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -141,7 +141,7 @@ const CURRENT_VERSION = '18'; // Exclude mock calendar events to show Katie 1:1
 
 const validViewModes: ViewMode[] = ['timeline', 'focus', 'meetings', 'projects', 'digest', 'commitments'];
 
-export default function Home() {
+function HomeContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   
@@ -531,7 +531,7 @@ export default function Home() {
       sourceMeta: {
         source: 'calendar',
         meta: {
-          eventType: 'meeting',
+          eventType: 'oneOnOne',
           startsAt: startDate.toISOString(),
           endsAt: endDate.toISOString(),
           tetheredArtifacts: [],
@@ -1010,5 +1010,18 @@ export default function Home() {
       /> */}
 
     </main>
+  );
+}
+
+// Wrap HomeContent with Suspense for useSearchParams
+export default function Home() {
+  return (
+    <Suspense fallback={
+      <main className="min-h-screen flex flex-col bg-black items-center justify-center">
+        <div className="text-white/30 text-sm font-mono">Loading...</div>
+      </main>
+    }>
+      <HomeContent />
+    </Suspense>
   );
 }

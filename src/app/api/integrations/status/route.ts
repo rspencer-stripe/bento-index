@@ -1,13 +1,17 @@
 import { NextResponse } from 'next/server';
+import { integrationRegistry } from '@/lib/integrations';
 
-// Check which integrations are configured
 export async function GET() {
-  const status = {
-    calendar: !!process.env.GOOGLE_ACCESS_TOKEN,
-    slack: !!process.env.SLACK_BOT_TOKEN || !!process.env.SLACK_USER_TOKEN,
-    drive: !!process.env.GOOGLE_ACCESS_TOKEN,
-    figma: !!process.env.FIGMA_ACCESS_TOKEN,
-  };
-
-  return NextResponse.json(status);
+  try {
+    // Get status of all integrations for the default user
+    const statuses = await integrationRegistry.getAllStatus('default');
+    
+    return NextResponse.json(statuses);
+  } catch (error) {
+    console.error('Failed to get integration status:', error);
+    return NextResponse.json(
+      { error: 'Failed to get integration status' },
+      { status: 500 }
+    );
+  }
 }

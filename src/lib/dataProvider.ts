@@ -28,23 +28,27 @@ export function getDemoItems(): MindItem[] {
   return liveItems;
 }
 
-// Live data fetching - calls API routes that integrate with real services
+// Live data fetching - uses the sync API
 export async function fetchLiveItems(): Promise<MindItem[]> {
   try {
-    const [calendar, slack, drive] = await Promise.all([
-      fetchCalendarEvents(),
-      fetchSlackMessages(),
-      fetchDriveFiles(),
-    ]);
+    const res = await fetch('/api/sync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode: 'live', sources: ['all'] }),
+    });
     
-    return [...calendar, ...slack, ...drive];
+    if (!res.ok) return [];
+    
+    const data = await res.json();
+    return data.items || [];
   } catch (error) {
     console.error('Failed to fetch live data:', error);
     return [];
   }
 }
 
-async function fetchCalendarEvents(): Promise<MindItem[]> {
+// Legacy individual fetch functions (still work for backward compatibility)
+export async function fetchCalendarEvents(): Promise<MindItem[]> {
   try {
     const res = await fetch('/api/integrations/calendar');
     if (!res.ok) return [];
@@ -54,7 +58,7 @@ async function fetchCalendarEvents(): Promise<MindItem[]> {
   }
 }
 
-async function fetchSlackMessages(): Promise<MindItem[]> {
+export async function fetchSlackMessages(): Promise<MindItem[]> {
   try {
     const res = await fetch('/api/integrations/slack');
     if (!res.ok) return [];
@@ -64,7 +68,7 @@ async function fetchSlackMessages(): Promise<MindItem[]> {
   }
 }
 
-async function fetchDriveFiles(): Promise<MindItem[]> {
+export async function fetchDriveFiles(): Promise<MindItem[]> {
   try {
     const res = await fetch('/api/integrations/drive');
     if (!res.ok) return [];
@@ -88,7 +92,14 @@ export async function checkIntegrationStatus(): Promise<IntegrationStatus> {
     if (!res.ok) {
       return { calendar: false, slack: false, drive: false, figma: false };
     }
-    return res.json();
+    const data = await res.json();
+    // Map from new format to legacy format
+    return {
+      calendar: data.calendar?.configured || false,
+      slack: data.slack?.configured || false,
+      drive: data.drive?.configured || false,
+      figma: data.figma?.configured || false,
+    };
   } catch {
     return { calendar: false, slack: false, drive: false, figma: false };
   }

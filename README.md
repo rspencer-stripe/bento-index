@@ -98,19 +98,68 @@ Then press `⌘⇧D` to switch to Live mode.
 
 ## Architecture
 
+INDEX is built with a production-ready, extensible architecture:
+
 ```
 src/
 ├── app/
-│   ├── page.tsx              # Main app with all views
+│   ├── page.tsx              # Main app with Suspense boundary
 │   ├── settings/page.tsx     # Integration configuration
-│   └── api/integrations/     # API routes for live data
-├── components/               # UI components
+│   └── api/
+│       ├── auth/[provider]/  # OAuth flow endpoints
+│       ├── integrations/     # Per-integration API routes
+│       └── sync/             # Unified sync endpoint
+├── components/               # UI components (Bento tiles, timeline, etc.)
 ├── lib/
-│   ├── types.ts             # MindItem schema
-│   ├── intelligence.ts       # Meeting prep, insights, nudges
-│   ├── dataProvider.ts       # Demo/Live mode switching
-│   ├── liveData.ts          # Demo dataset
-│   └── mockData.ts          # Additional mock items
+│   ├── auth/                 # OAuth provider configs
+│   │   ├── providers.ts      # Google, Slack, Figma OAuth
+│   │   └── index.ts
+│   ├── db/                   # Database layer (Drizzle ORM)
+│   │   ├── schema.ts         # Users, tokens, items, sync log
+│   │   └── client.ts         # Vercel Postgres connection
+│   ├── integrations/         # Plugin architecture
+│   │   ├── types.ts          # Integration interface
+│   │   ├── base.ts           # Abstract base class
+│   │   ├── google-calendar.ts
+│   │   ├── slack.ts
+│   │   └── registry.ts       # Integration registry
+│   ├── store/                # State management (Zustand)
+│   │   └── index.ts          # Global app store with persistence
+│   ├── sync/                 # Sync engine
+│   │   ├── idb.ts            # IndexedDB for offline cache
+│   │   └── engine.ts         # Sync orchestration
+│   ├── hooks/                # React hooks
+│   │   └── useDataSync.ts    # Data sync hook
+│   ├── types.ts              # Core type definitions
+│   ├── intelligence.ts       # AI features (meeting prep, nudges)
+│   └── liveData.ts           # Curated demo dataset
+```
+
+### Key Design Decisions
+
+| Component | Technology | Why |
+|-----------|------------|-----|
+| Database | Drizzle ORM + Vercel Postgres | Type-safe, serverless-ready |
+| State | Zustand | Simple, performant, persisted |
+| Cache | IndexedDB | Offline-first, large data support |
+| Auth | OAuth 2.0 | Standard, multi-provider |
+| Integrations | Plugin pattern | Easy to extend |
+
+### Adding a New Integration
+
+1. Create `src/lib/integrations/your-integration.ts`
+2. Extend `BaseIntegration` class
+3. Implement `fetch()` and `transform()` methods
+4. Register in `registry.ts`
+
+```typescript
+import { BaseIntegration } from './base';
+
+export class MyIntegration extends BaseIntegration<RawType, ConfigType> {
+  readonly id = 'my-integration';
+  readonly name = 'My Integration';
+  // ... implement abstract methods
+}
 ```
 
 ## For Stripe Employees

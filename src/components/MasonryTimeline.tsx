@@ -471,7 +471,7 @@ export function MasonryTimeline({ items, onItemClick, onTimeChange, onItemDelete
             </div>
           ) : (
             <button
-              onClick={scrollToNow}
+              onClick={() => scrollToNow()}
               className={`px-3 py-1.5 bg-black/50 backdrop-blur-sm rounded-lg text-xs font-mono transition-colors ${isViewingNow ? 'text-white/50' : 'text-white/70 hover:text-white hover:bg-white/10'}`}
             >
               {isViewingNow ? 'now' : formatViewedTime(viewedTime)}
@@ -506,7 +506,7 @@ export function MasonryTimeline({ items, onItemClick, onTimeChange, onItemDelete
                   />
                 )}
                 <button
-                  onClick={scrollToNow}
+                  onClick={() => scrollToNow()}
                   className={`text-[10px] font-mono uppercase tracking-wider transition-colors ${
                     isViewingNow ? 'text-white/50' : 'text-white/70 hover:text-white cursor-pointer'
                   }`}

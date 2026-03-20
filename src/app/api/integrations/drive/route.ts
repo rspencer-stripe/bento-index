@@ -115,9 +115,9 @@ function transformDriveFile(file: DriveFile): MindItem {
         executiveSummary: file.description || '',
         lastEditors: file.owners?.map(o => ({
           name: o.displayName,
-          editedAt: file.modifiedTime,
+          editedAt: file.modifiedTime || new Date().toISOString(),
         })) || [],
-        webUrl: file.webViewLink,
+        webUrl: file.webViewLink || '',
       },
     },
     createdAt: file.createdTime || file.modifiedTime || new Date().toISOString(),

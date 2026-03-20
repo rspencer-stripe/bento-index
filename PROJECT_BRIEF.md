@@ -407,83 +407,90 @@ Data ingestion uses MCP (Model Context Protocol). Each source has a correspondin
 
 ### Essential Journeys
 
-**Core Architecture**
-- Six-view architecture with consistent design language
-- Intelligence layer with priority scoring, commitment extraction, and relationship mapping
-- localStorage persistence with version-based refresh
-- Keyboard shortcuts (1-6) for view switching
+Each journey maps to the Top 10 Flows that demonstrate INDEX's promise.
 
-**Timeline**
-- Two modes: Stream (scroll-based) and Day (date-filtered)
-- Fixed "now" line that responds to scroll position (green/pulsing → red/time offset)
-- Day view with intelligent item surfacing (recency + priority, not just date)
-- Item actions: Complete, Defer, Open, Quick Reply (for Slack)
-- Stable card heights (no layout shift on hover)
-- Drag-to-trash for item deletion
+---
 
-**Live Data Integration**
-- Real calendar events fetched via Google Calendar MCP
-- Real Slack messages fetched via Slack MCP
-- Real Google Drive documents fetched via Drive MCP
-- Combined live + mock data for complete context
-
-**Smarter Intelligence**
-- **Meeting Prep**: Auto-generated context for upcoming meetings
-  - Related documents by tag and attendee
-  - Recent conversations with attendees
-  - Open questions extracted from related items
+**1. The 5-Minute Meeting Prep** ✓
+- Banner appears when meeting is ≤15 minutes away
+- One-click opens Meeting Prep Panel with:
+  - Related documents (by tag and attendee)
+  - Recent Slack conversations with attendees
+  - Open questions extracted from items
   - Suggested discussion topics
-  - Person context (recent interactions, pending items)
-- **Stale Item Nudges**: Detection of items needing attention
-  - High priority items untouched for 3+ days
-  - Suggested actions (follow up, archive, delegate)
-- **Cross-Item Relationships**: Automatic relationship detection
-  - Same project/tag
-  - Shared people mentions
-  - Temporal proximity
-  - Topic/keyword overlap
-  - URL/document references
-- **Waiting Detection**: Items where someone is waiting on you
-  - Pattern matching for waiting language
-  - "WAITING" badge on relevant cards
+  - Person context (last interaction, pending items)
+  - Link to previous meeting notes
 
-**Notification Layer**
-- **Alert Bar**: Floating alerts at bottom of screen
-  - Meeting soon alerts (with prep button)
-  - Overdue commitment warnings
-  - Waiting response alerts
-  - Stale high-priority item notifications
-  - Severity levels: critical (red), warning (amber), info (blue)
-  - Dismissable with carousel for multiple alerts
-- **Meeting Prep Banner**: Top banner for imminent meetings (≤15 min)
-  - Shows meeting title, attendees, time until
-  - One-click access to meeting prep panel
-- **Header Indicators**
-  - Waiting-on-me count (⚡)
-  - Next meeting countdown (when ≤60 min)
-  - Overdue commitments count
-  - Live data refresh button
+**2. The "What Was That Thing?" Recovery** ✓
+- Timeline with continuous vertical scroll
+- Fixed "now" line marks present; scroll to navigate time
+- All items (Slack, Drive, Figma, Calendar) positioned temporally
+- Cross-item relationships link related content
+- One-click opens source item
 
-**Two-Way Actions**
-- **Natural Language Scheduling**: "Schedule 30 minutes with Katie Koch"
-  - Parser extracts person and duration
-  - Scheduling modal with suggested time slots
-  - Creates calendar event on confirmation
-- **Quick Slack Replies**: Reply button on Slack items
-  - Opens thread in Slack
-  - Designed for future inline reply support
+**3. The Morning Scan** ✓
+- Day View shows today's board at a glance
+- Calendar events sorted by time
+- "WAITING" badges on items needing your response
+- High-priority items surfaced automatically
+- Header shows: waiting count (⚡), next meeting countdown, overdue count
 
-**Meeting Prep Panel**
-- Full-screen slide-out panel for meeting context
-- Sections: Attendees, People Context, Open Questions, Suggested Topics
-- Related Documents and Recent Conversations (clickable)
-- Previous meeting notes link
-- AI-generated badge indicating auto-synthesis
+**4. The Commitment Catch** ✓
+- Commitments auto-extracted from messages ("I'll...", "Let me...")
+- Commitments view (press 6) shows all tracked promises
+- Items >3 days old surface as overdue
+- Alert bar warns of overdue commitments
 
-**Other Views**
-- Meeting companion with context surfacing
-- Projects view with filters (Active/Needs Attention/Hidden) and sorting
-- OmniBar with hashtag detection and scheduling
+**5. The Natural Language Schedule** ✓
+- OmniBar parses "Schedule 30 minutes with Katie Koch"
+- Green preview badge shows parsed intent
+- Modal presents 5-6 available time slots
+- Pick a slot → calendar event created
+- Event appears in Timeline immediately
+
+**6. The Project Pulse Check** ✓
+- Projects view (press 4) groups items by #tag
+- Each project shows: status, momentum (↑→↓), open items, pending decisions
+- Filters: Active / Needs Attention / Hidden
+- Stale item nudges for projects going quiet
+- Click to see project's top items
+
+**7. The Quick Capture** ✓
+- ⌘K opens OmniBar from anywhere
+- Paste URL → auto-detected source (Figma, Drive, Slack, etc.)
+- Add #hashtag for project assignment
+- Item captured with timestamp, tagged, searchable
+- Appears in Timeline at current position
+
+**8. The End-of-Day Digest** ✓
+- Digest view (press 5) summarizes the day
+- Shows: items touched, meetings attended, commitments made
+- "Still open" section for high-priority carryovers
+- Tomorrow preview: upcoming meetings
+- Clean closure before signing off
+
+**9. The Stale Item Nudge** ✓
+- Intelligence detects high-priority items untouched 3+ days
+- Alert bar surfaces critical stale items
+- Nudge includes: reason, suggested action (follow up, archive, delegate)
+- Related active items shown for context
+- Dismiss or act with one click
+
+**10. The Context Handoff** ✓
+- Timeline opens scrolled to "now"
+- Future meetings visible above
+- Yesterday's activity visible below
+- Items grouped spatially and temporally
+- Click time indicator to snap back to present
+
+---
+
+**Foundation**
+- Six-view architecture (Timeline, Focus, Meetings, Projects, Digest, Commitments)
+- Keyboard shortcuts 1-6 for instant view switching
+- Live data from Calendar, Slack, Drive via MCP
+- localStorage persistence with version-based refresh
+- Consistent dark design language across all views
 
 ### Near-Term Focus
 - Inline quick replies without leaving INDEX

@@ -658,12 +658,10 @@ export default function Home() {
                 >
                   <Icon size={16} strokeWidth={isActive ? 2 : 1.5} />
                   {showBadge && (
-                    <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 flex items-center justify-center rounded-full text-[8px] font-bold bg-red-500 text-white">
-                      {overdueCount}
-                    </span>
+                    <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-red-400/80" />
                   )}
                   {showMeetingBadge && (
-                    <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                    <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-400/80" />
                   )}
                 </button>
               );

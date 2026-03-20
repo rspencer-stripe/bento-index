@@ -630,12 +630,12 @@ export default function Home() {
     <main className="min-h-screen flex flex-col bg-black" style={{ scrollbarGutter: 'stable' }}>
       {/* Minimal Header */}
       <header className="sticky top-0 z-40 bg-black border-b border-[#222]">
-        <div className="flex items-center h-14 px-5 gap-6">
+        <div className="flex items-center h-16 px-6 gap-8">
           {/* Logo */}
-          <h1 className="text-sm font-semibold tracking-tight text-white/80">INDEX</h1>
+          <h1 className="text-base font-semibold tracking-tight text-white/80">INDEX</h1>
           
           {/* Mode Switcher - Icon only, subtle */}
-          <div className="flex items-center gap-0.5">
+          <div className="flex items-center gap-1">
             {viewModes.map(mode => {
               const Icon = mode.icon;
               const isActive = viewMode === mode.id;
@@ -648,7 +648,7 @@ export default function Home() {
                   key={mode.id}
                   onClick={() => setViewMode(mode.id)}
                   className={`
-                    relative p-2 rounded-md transition-all
+                    relative p-2.5 rounded-lg transition-all
                     ${isActive 
                       ? 'text-white' 
                       : 'text-white/30 hover:text-white/60'
@@ -656,12 +656,12 @@ export default function Home() {
                   `}
                   title={mode.id.charAt(0).toUpperCase() + mode.id.slice(1)}
                 >
-                  <Icon size={16} strokeWidth={isActive ? 2 : 1.5} />
+                  <Icon size={20} strokeWidth={isActive ? 2 : 1.5} />
                   {showBadge && (
-                    <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-red-400/80" />
+                    <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-red-400/80" />
                   )}
                   {showMeetingBadge && (
-                    <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-400/80" />
+                    <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-emerald-400/80" />
                   )}
                 </button>
               );
@@ -669,7 +669,7 @@ export default function Home() {
           </div>
 
           {/* Divider */}
-          <div className="w-px h-4 bg-white/10" />
+          <div className="w-px h-6 bg-white/10" />
 
           {/* OmniBar - Left aligned after modes */}
           <OmniBar 
@@ -682,16 +682,16 @@ export default function Home() {
           <div className="flex-1" />
 
           {/* Contextual alerts - minimal */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             {/* Meeting prep pill - shows when meeting is soon */}
             {imminentMeeting && (
               <button
                 onClick={handleOpenMeetingPrep}
-                className="flex items-center gap-2 px-2 py-1 bg-white/5 rounded-md hover:bg-white/10 transition-colors"
+                className="flex items-center gap-2.5 px-3 py-1.5 bg-white/5 rounded-lg hover:bg-white/10 transition-colors"
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-xs text-white/60">{imminentMeeting.item.title}</span>
-                <span className="text-[10px] text-white/40 font-mono">{imminentMeeting.minsUntil}m</span>
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="text-sm text-white/60">{imminentMeeting.item.title}</span>
+                <span className="text-xs text-white/40 font-mono">{imminentMeeting.minsUntil}m</span>
               </button>
             )}
 
@@ -699,10 +699,10 @@ export default function Home() {
             {waitingOnMeCount > 0 && (
               <button
                 onClick={() => setViewMode('focus')}
-                className="flex items-center gap-1 text-amber-400/80 text-xs font-mono hover:text-amber-400 transition-colors"
+                className="flex items-center gap-1.5 text-amber-400/80 text-sm font-mono hover:text-amber-400 transition-colors"
                 title={`${waitingOnMeCount} items waiting on you`}
               >
-                <Zap size={10} />
+                <Zap size={14} />
                 {waitingOnMeCount}
               </button>
             )}
@@ -711,9 +711,9 @@ export default function Home() {
             {overdueCount > 0 && (
               <button
                 onClick={() => setViewMode('commitments')}
-                className="flex items-center gap-1 text-red-400/80 text-xs font-mono hover:text-red-400 transition-colors"
+                className="flex items-center gap-1.5 text-red-400/80 text-sm font-mono hover:text-red-400 transition-colors"
               >
-                <AlertCircle size={10} />
+                <AlertCircle size={14} />
                 {overdueCount}
               </button>
             )}
@@ -721,10 +721,10 @@ export default function Home() {
             {/* Data source toggle */}
             <button
               onClick={handleRefreshLiveData}
-              className="flex items-center gap-1 text-white/30 text-xs font-mono hover:text-white/50 transition-colors"
+              className="flex items-center gap-1.5 text-white/30 text-sm font-mono hover:text-white/50 transition-colors"
               title="Refresh with live data"
             >
-              <Database size={10} />
+              <Database size={14} />
               <span className="hidden sm:inline">Live</span>
             </button>
           </div>

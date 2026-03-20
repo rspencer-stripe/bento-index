@@ -137,7 +137,7 @@ function getItemThumbnail(item: MindItem): string | null {
 
 const STORAGE_KEY = 'index-items';
 const STORAGE_VERSION_KEY = 'index-version';
-const CURRENT_VERSION = '14'; // Force refresh for meeting prep demo
+const CURRENT_VERSION = '15'; // Enhanced demo data for all 10 journeys
 
 const validViewModes: ViewMode[] = ['timeline', 'focus', 'meetings', 'projects', 'digest', 'commitments'];
 

@@ -190,7 +190,7 @@ const staleItems: MindItem[] = [
 
 // ═══════════════════════════════════════════════════════════════════════════
 // JOURNEY 2 & 10: Timeline context (past and future items)
-// Need: Items spread across yesterday, today, tomorrow
+// Need: Items spread across yesterday, today, tomorrow for "What Was That Thing?" recovery
 // ═══════════════════════════════════════════════════════════════════════════
 
 const timelineItems: MindItem[] = [
@@ -236,15 +236,76 @@ const timelineItems: MindItem[] = [
     createdAt: daysAgo(1),
     lastTouchedAt: daysAgo(1),
   },
+  // Journey 2: "What Was That Thing?" - items from earlier this week
+  {
+    id: 'drive-user-research-doc',
+    tag: '#Radar',
+    type: 'artifact',
+    priority: 4,
+    title: 'Radar User Research Findings',
+    snippet: 'Key insights from 12 user interviews. "Users want to see fraud in context of their business, not abstract charts."',
+    source: 'drive',
+    sourceMeta: {
+      source: 'drive',
+      meta: {
+        docTitle: 'Radar User Research Findings',
+        executiveSummary: 'User research summary for Radar redesign',
+        lastEditors: [{ name: 'Katie Koch', editedAt: daysAgo(3) }],
+        webUrl: 'https://docs.google.com/document/d/1abc123/edit',
+      },
+    },
+    createdAt: daysAgo(5),
+    lastTouchedAt: daysAgo(3),
+  },
+  {
+    id: 'slack-figma-link-share',
+    tag: '#Radar',
+    type: 'note',
+    priority: 3,
+    title: 'Figma link from Katie',
+    snippet: 'Here\'s the latest Figma file with the performance metrics exploration: figma.com/file/xyz',
+    source: 'slack',
+    sourceMeta: {
+      source: 'slack',
+      meta: {
+        coreAsk: 'Shared design file',
+        collaborator: { name: 'katiek' },
+        threadUrl: 'https://stripe.slack.com/archives/D05SUBXP78F/p1773890000000000',
+        channel: 'DM with Katie',
+      },
+    },
+    createdAt: daysAgo(4),
+    lastTouchedAt: daysAgo(4),
+  },
+  // 2 days ago
+  {
+    id: 'figma-disputes-flow',
+    tag: '#Disputes',
+    type: 'artifact',
+    priority: 4,
+    title: 'Disputes Flow Redesign',
+    snippet: 'Updated flow with auto-submit preview screen and user controls',
+    source: 'figma',
+    sourceMeta: {
+      source: 'figma',
+      meta: {
+        fileName: 'Disputes Flow Redesign',
+        lastModified: daysAgo(2),
+        desktopUrl: 'figma://file/disputes123',
+      },
+    },
+    createdAt: daysAgo(10),
+    lastTouchedAt: daysAgo(2),
+  },
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════
 // JOURNEY 6: Project Pulse Check
-// Need: Multiple projects with varying health states
+// Need: Multiple projects with varying health states (active, stale, blocked)
 // ═══════════════════════════════════════════════════════════════════════════
 
 const projectItems: MindItem[] = [
-  // Active project with momentum
+  // Active project with momentum (#Radar - healthy)
   {
     id: 'figma-radar-overview',
     tag: '#Radar',
@@ -264,11 +325,74 @@ const projectItems: MindItem[] = [
     createdAt: daysAgo(7),
     lastTouchedAt: hoursAgo(1),
   },
+  // #Disputes project - needs attention (pending decision)
+  {
+    id: 'slack-disputes-pending-decision',
+    tag: '#Disputes',
+    type: 'note',
+    priority: 5,
+    title: 'Pending: Auto-submit rollout scope',
+    snippet: 'Need to decide: do we launch auto-submit to all merchants or start with subset? Engineering waiting on this call.',
+    source: 'slack',
+    sourceMeta: {
+      source: 'slack',
+      meta: {
+        coreAsk: 'Rollout scope decision needed',
+        collaborator: { name: 'jesstam' },
+        threadUrl: 'https://stripe.slack.com/archives/C08QZC57TD4/p1773956055380821',
+        channel: '#radar-disputes',
+      },
+    },
+    createdAt: daysAgo(3),
+    lastTouchedAt: daysAgo(2),
+  },
+  // #Terminal project - stale (no activity in 8 days)
+  {
+    id: 'slack-terminal-feedback',
+    tag: '#Terminal',
+    type: 'note',
+    priority: 3,
+    title: 'Terminal reader UX feedback',
+    snippet: 'Some thoughts on the reader configuration flow. Users find it confusing when they have multiple readers.',
+    source: 'slack',
+    sourceMeta: {
+      source: 'slack',
+      meta: {
+        coreAsk: 'UX feedback on reader config',
+        collaborator: { name: 'perryh' },
+        threadUrl: 'https://stripe.slack.com/archives/C0terminal/p123',
+        channel: '#terminal-design',
+      },
+    },
+    createdAt: daysAgo(12),
+    lastTouchedAt: daysAgo(8),
+  },
+  // #PayIntel project - active with recent doc
+  {
+    id: 'drive-payintel-roadmap',
+    tag: '#PayIntel',
+    type: 'artifact',
+    priority: 4,
+    title: 'PayIntel Q2 Roadmap',
+    snippet: 'Prioritized list of payment intelligence features for Q2',
+    source: 'drive',
+    sourceMeta: {
+      source: 'drive',
+      meta: {
+        docTitle: 'PayIntel Q2 Roadmap',
+        executiveSummary: 'Q2 feature priorities',
+        lastEditors: [{ name: 'Ryan Spencer', editedAt: hoursAgo(6) }],
+        webUrl: 'https://docs.google.com/document/d/payintel-roadmap/edit',
+      },
+    },
+    createdAt: daysAgo(30),
+    lastTouchedAt: hoursAgo(6),
+  },
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════
 // JOURNEY 8: End-of-Day Digest
-// Need: Mix of items touched today
+// Need: Mix of items touched today showing full day's activity
 // ═══════════════════════════════════════════════════════════════════════════
 
 const todayItems: MindItem[] = [
@@ -291,6 +415,77 @@ const todayItems: MindItem[] = [
     },
     createdAt: daysAgo(180),
     lastTouchedAt: hoursAgo(4),
+  },
+  {
+    id: 'slack-design-ai-thread',
+    tag: '#DesigningAI',
+    type: 'note',
+    priority: 3,
+    title: 'AI Design: Fictional Data Unlock',
+    snippet: 'The process of recruiting users → generating fictional data to make the product feel real is such a great unlock!',
+    source: 'slack',
+    sourceMeta: {
+      source: 'slack',
+      meta: {
+        coreAsk: 'AI design methodologies',
+        collaborator: { name: '#designing-ai' },
+        threadUrl: 'https://stripe.slack.com/archives/C08P4284UTV/p1773957167506239',
+        channel: '#designing-ai',
+      },
+    },
+    createdAt: hoursAgo(5),
+    lastTouchedAt: hoursAgo(5),
+  },
+  {
+    id: 'figma-radar-components',
+    tag: '#Radar',
+    type: 'artifact',
+    priority: 3,
+    title: 'Radar Component Library',
+    snippet: 'Updated chart components with new color palette',
+    source: 'figma',
+    sourceMeta: {
+      source: 'figma',
+      meta: {
+        fileName: 'Radar Component Library',
+        lastModified: hoursAgo(3),
+        desktopUrl: 'figma://file/components123',
+      },
+    },
+    createdAt: daysAgo(60),
+    lastTouchedAt: hoursAgo(3),
+  },
+];
+
+// ═══════════════════════════════════════════════════════════════════════════
+// JOURNEY 10: Context Handoff - Past meetings for continuity
+// ═══════════════════════════════════════════════════════════════════════════
+
+const pastMeetings: MindItem[] = [
+  {
+    id: 'cal-yesterday-standup',
+    tag: '#Radar',
+    type: 'event',
+    priority: 3,
+    title: 'Radar Design Standup',
+    snippet: 'Yesterday\'s standup - discussed overview progress',
+    source: 'calendar',
+    sourceMeta: {
+      source: 'calendar',
+      meta: {
+        eventType: 'standup',
+        startsAt: daysAgo(1),
+        endsAt: daysAgo(1),
+        tetheredArtifacts: [],
+        attendees: [
+          { name: 'jacobmeltzer@stripe.com' },
+          { name: 'katiek@stripe.com' },
+        ],
+        zoomLink: 'https://stripe.zoom.us/j/91961598884',
+      },
+    },
+    createdAt: daysAgo(7),
+    lastTouchedAt: daysAgo(1),
   },
 ];
 
@@ -370,10 +565,11 @@ export const liveItems: MindItem[] = [
   // Journey 9: Stale Nudges
   ...staleItems,
   
-  // Journeys 2 & 10: Timeline context
+  // Journeys 2 & 10: Timeline context + past meetings
   ...timelineItems,
+  ...pastMeetings,
   
-  // Journey 6: Project variety
+  // Journey 6: Project variety (multiple projects, different health)
   ...projectItems,
   
   // Journey 8: Today's activity

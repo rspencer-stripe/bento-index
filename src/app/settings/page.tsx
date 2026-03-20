@@ -28,8 +28,9 @@ const integrations = [
     name: 'Google Calendar',
     icon: Calendar,
     description: 'Import your meetings and schedule',
-    envVars: ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET'],
-    docsUrl: 'https://developers.google.com/calendar/api/quickstart/js',
+    envVars: ['GOOGLE_ACCESS_TOKEN'],
+    docsUrl: 'https://developers.google.com/oauthplayground/',
+    hint: 'Use OAuth Playground to get a test token (expires in 1 hour)',
   },
   {
     id: 'slack',
@@ -37,15 +38,17 @@ const integrations = [
     icon: MessageSquare,
     description: 'Import messages and threads',
     envVars: ['SLACK_BOT_TOKEN'],
-    docsUrl: 'https://api.slack.com/authentication/token-types',
+    docsUrl: 'https://api.slack.com/apps',
+    hint: 'Create a Slack App with search:read, channels:history scopes',
   },
   {
     id: 'drive',
     name: 'Google Drive',
     icon: FileText,
     description: 'Import documents and files',
-    envVars: ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET'],
-    docsUrl: 'https://developers.google.com/drive/api/quickstart/js',
+    envVars: ['GOOGLE_ACCESS_TOKEN'],
+    docsUrl: 'https://developers.google.com/oauthplayground/',
+    hint: 'Same token as Calendar - both use Google OAuth',
   },
   {
     id: 'figma',
@@ -54,6 +57,7 @@ const integrations = [
     description: 'Import design files',
     envVars: ['FIGMA_ACCESS_TOKEN'],
     docsUrl: 'https://www.figma.com/developers/api#access-tokens',
+    hint: 'Generate a personal access token in Figma settings',
   },
 ];
 
@@ -157,6 +161,9 @@ export default function SettingsPage() {
                           )}
                         </div>
                         <p className="text-sm text-white/50">{integration.description}</p>
+                        {'hint' in integration && (
+                          <p className="text-xs text-white/30 mt-1">{integration.hint}</p>
+                        )}
                       </div>
                     </div>
                     <a

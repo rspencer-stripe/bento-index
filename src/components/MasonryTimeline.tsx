@@ -2,9 +2,11 @@
 
 import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trash2 } from 'lucide-react';
+import { Trash2, ChevronLeft, ChevronRight, Layers, CalendarDays } from 'lucide-react';
 import { MindItem } from '@/lib/types';
 import { ItemCard } from './ItemCard';
+
+type TimelineMode = 'stream' | 'day';
 
 interface MasonryTimelineProps {
   items: MindItem[];
@@ -12,6 +14,7 @@ interface MasonryTimelineProps {
   onTimeChange?: (viewedTime: Date, isNow: boolean) => void;
   onItemDelete?: (itemId: string) => void;
   onItemComplete?: (item: MindItem) => void;
+  onItemDefer?: (item: MindItem) => void;
   onItemsReorder?: (items: MindItem[]) => void;
   newlyAddedId?: string | null;
 }
@@ -45,8 +48,10 @@ function getItemOpacity(item: MindItem): number {
   return 0.5;
 }
 
-export function MasonryTimeline({ items, onItemClick, onTimeChange, onItemDelete, onItemComplete, onItemsReorder, newlyAddedId }: MasonryTimelineProps) {
+export function MasonryTimeline({ items, onItemClick, onTimeChange, onItemDelete, onItemComplete, onItemDefer, onItemsReorder, newlyAddedId }: MasonryTimelineProps) {
   const [columns, setColumns] = useState(4);
+  const [mode, setMode] = useState<TimelineMode>('stream');
+  const [selectedDate, setSelectedDate] = useState(new Date());
   const [viewedTime, setViewedTime] = useState(new Date());
   const [isViewingNow, setIsViewingNow] = useState(true);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -112,107 +117,270 @@ export function MasonryTimeline({ items, onItemClick, onTimeChange, onItemDelete
     return () => window.removeEventListener('resize', updateColumns);
   }, []);
 
-  // Scroll to now
-  const scrollToNow = useCallback((smooth = true) => {
+  // Navigate to a different day (for day mode)
+  const jumpDays = useCallback((days: number) => {
+    setSelectedDate(prev => {
+      const newDate = new Date(prev);
+      newDate.setDate(newDate.getDate() + days);
+      return newDate;
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
+  // Go to today (for day mode)
+  const goToToday = useCallback(() => {
+    setSelectedDate(new Date());
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
+  // Scroll to now marker (for stream mode)
+  const scrollToNow = useCallback((instant?: boolean) => {
     if (nowMarkerRef.current) {
-      const viewportCenter = window.innerHeight / 2;
-      const nowMarkerRect = nowMarkerRef.current.getBoundingClientRect();
-      const nowMarkerCenter = nowMarkerRect.top + nowMarkerRect.height / 2;
-      const scrollOffset = nowMarkerCenter - viewportCenter;
-      
-      window.scrollBy({
-        top: scrollOffset,
-        behavior: smooth ? 'smooth' : 'instant'
-      });
+      const markerRect = nowMarkerRef.current.getBoundingClientRect();
+      const targetY = window.scrollY + markerRect.top - window.innerHeight / 2 + markerRect.height / 2;
+      window.scrollTo({ top: targetY, behavior: instant ? 'instant' : 'smooth' });
     }
   }, []);
 
-  // Scroll to now on initial mount
+  // Initialize and scroll to now for stream mode
   useEffect(() => {
-    // Small delay to ensure the DOM has rendered
     const timer = setTimeout(() => {
-      scrollToNow(false);
-      // Show the time indicator after scroll completes
-      setTimeout(() => setIsInitialized(true), 50);
-    }, 100);
+      setIsInitialized(true);
+      if (mode === 'stream') {
+        scrollToNow(true); // instant scroll on init
+      }
+    }, 50);
     return () => clearTimeout(timer);
-  }, [scrollToNow]);
+  }, [mode, scrollToNow]);
 
-  // Calculate viewed time based on scroll position
+  // Track scroll position for stream mode
   useEffect(() => {
-    const handleScroll = () => {
-      if (!nowMarkerRef.current || !containerRef.current) return;
+    if (mode !== 'stream') return;
 
+    const handleScroll = () => {
+      if (!nowMarkerRef.current) return;
+
+      const markerRect = nowMarkerRef.current.getBoundingClientRect();
       const viewportCenter = window.innerHeight / 2;
-      const nowMarkerRect = nowMarkerRef.current.getBoundingClientRect();
-      const nowMarkerCenter = nowMarkerRect.top + nowMarkerRect.height / 2;
-      
-      // How far is the "now" marker from viewport center?
-      // Positive = now marker is below center = we're viewing the future
-      // Negative = now marker is above center = we're viewing the past
-      const pixelOffset = nowMarkerCenter - viewportCenter;
-      
-      // Convert pixels to hours (roughly 100px = 1 hour)
-      // Flip the sign: scrolling down (now marker goes up) = past
-      const hoursOffset = -pixelOffset / 100;
-      
-      // Calculate viewed time
-      const newViewedTime = new Date(Date.now() + hoursOffset * 60 * 60 * 1000);
-      setViewedTime(newViewedTime);
-      
-      // Are we viewing "now"? (within 30 mins)
-      const isNow = Math.abs(hoursOffset) < 0.5;
+      const distanceFromCenter = markerRect.top - viewportCenter;
+      const hoursOffset = distanceFromCenter / 100;
+
+      const newTime = new Date(Date.now() - hoursOffset * 60 * 60 * 1000);
+      setViewedTime(newTime);
+
+      const isNow = Math.abs(distanceFromCenter) < 100;
       setIsViewingNow(isNow);
-      
-      // Notify parent
-      onTimeChange?.(newViewedTime, isNow);
+
+      if (onTimeChange) {
+        onTimeChange(newTime, isNow);
+      }
     };
 
-    handleScroll();
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [onTimeChange]);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [mode, onTimeChange]);
 
-  const { allItems } = useMemo(() => {
-    const sorted = [...items]
-      .map(item => ({
-        item,
-        relevance: getTemporalRelevance(item),
-        opacity: getItemOpacity(item),
-      }))
-      .sort((a, b) => a.relevance - b.relevance); // oldest/past first, future last
+  // Scroll to top when a new item is added
+  useEffect(() => {
+    if (newlyAddedId) {
+      if (mode === 'stream') {
+        scrollToNow();
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+  }, [newlyAddedId, mode, scrollToNow]);
 
-    return { allItems: sorted };
-  }, [items]);
+  // Check if viewing today (for day mode)
+  const isToday = selectedDate.toDateString() === new Date().toDateString();
 
-  // Find where "now" should be inserted in the sorted list
-  const nowIndex = useMemo(() => {
-    return allItems.findIndex(i => i.relevance >= 0);
-  }, [allItems]);
+  // Get the relevant date for an item
+  const getItemDate = useCallback((item: MindItem): Date => {
+    if (item.source === 'calendar') {
+      const meta = item.sourceMeta.meta as { startsAt: string };
+      if (meta?.startsAt) {
+        return new Date(meta.startsAt);
+      }
+    }
+    return new Date(item.lastTouchedAt);
+  }, []);
 
-  const pastItems = allItems.slice(0, nowIndex === -1 ? allItems.length : nowIndex);
-  const futureItems = nowIndex === -1 ? [] : allItems.slice(nowIndex);
+  // Stream mode: all items sorted by temporal relevance
+  const { futureItems, pastItems } = useMemo(() => {
+    if (mode !== 'stream') return { futureItems: [], pastItems: [] };
+
+    const withMeta = items.map(item => ({
+      item,
+      relevance: getTemporalRelevance(item),
+      opacity: getItemOpacity(item),
+    }));
+
+    // Sort by temporal relevance (future first, then recent past)
+    withMeta.sort((a, b) => b.relevance - a.relevance);
+
+    // Split into future and past
+    const future = withMeta.filter(i => i.relevance > 0);
+    const past = withMeta.filter(i => i.relevance <= 0);
+
+    return { futureItems: future, pastItems: past };
+  }, [items, mode]);
+
+  // Day mode: items relevant to the selected date
+  // - Calendar events: scheduled for that day
+  // - Slack/Drive/Other: recent activity (within 48h) OR high priority OR manually added
+  const { dayItems } = useMemo(() => {
+    if (mode !== 'day') return { dayItems: [] };
+
+    const now = new Date();
+    const startOfSelected = new Date(selectedDate);
+    startOfSelected.setHours(0, 0, 0, 0);
+    
+    const endOfSelected = new Date(selectedDate);
+    endOfSelected.setHours(23, 59, 59, 999);
+
+    // Check if selected date is today
+    const isSelectedToday = selectedDate.toDateString() === now.toDateString();
+    const isSelectedTomorrow = selectedDate.toDateString() === new Date(now.getTime() + 86400000).toDateString();
+    const isSelectedYesterday = selectedDate.toDateString() === new Date(now.getTime() - 86400000).toDateString();
+
+    const filtered = items.filter(item => {
+      // Calendar events: show if event is on the selected day
+      if (item.source === 'calendar') {
+        const meta = item.sourceMeta.meta as { startsAt: string };
+        if (meta?.startsAt) {
+          const eventDate = new Date(meta.startsAt);
+          return eventDate >= startOfSelected && eventDate <= endOfSelected;
+        }
+        return false;
+      }
+
+      // Omnibar items (manually added): always show on today/yesterday
+      if (item.source === 'omnibar') {
+        if (isSelectedToday || isSelectedYesterday) return true;
+        const touchedDate = new Date(item.lastTouchedAt);
+        return touchedDate >= startOfSelected && touchedDate <= endOfSelected;
+      }
+
+      // Slack/Drive/Other items: show based on recency and importance
+      const touchedDate = new Date(item.lastTouchedAt);
+      const hoursSinceTouched = (now.getTime() - touchedDate.getTime()) / (1000 * 60 * 60);
+
+      // For today: show recent items (last 48h) or high priority items
+      if (isSelectedToday) {
+        const isRecent = hoursSinceTouched <= 48;
+        const isHighPriority = item.priority >= 4;
+        return isRecent || isHighPriority;
+      }
+
+      // For tomorrow: show high priority items that might need prep
+      if (isSelectedTomorrow) {
+        return item.priority >= 4;
+      }
+
+      // For yesterday: show items touched that day
+      if (isSelectedYesterday) {
+        return touchedDate >= startOfSelected && touchedDate <= endOfSelected;
+      }
+
+      // For other days: strict date match
+      return touchedDate >= startOfSelected && touchedDate <= endOfSelected;
+    });
+
+    const withMeta = filtered.map(item => ({
+      item,
+      relevance: getTemporalRelevance(item),
+      opacity: getItemOpacity(item),
+    }));
+
+    // Sort: calendar events by time, then other items by priority/recency
+    withMeta.sort((a, b) => {
+      // Calendar events first, sorted by start time
+      const aIsCalendar = a.item.source === 'calendar';
+      const bIsCalendar = b.item.source === 'calendar';
+      
+      if (aIsCalendar && !bIsCalendar) return -1;
+      if (!aIsCalendar && bIsCalendar) return 1;
+      
+      if (aIsCalendar && bIsCalendar) {
+        const aDate = getItemDate(a.item);
+        const bDate = getItemDate(b.item);
+        return aDate.getTime() - bDate.getTime();
+      }
+      
+      // Non-calendar: sort by priority first, then recency
+      if (a.item.priority !== b.item.priority) {
+        return b.item.priority - a.item.priority;
+      }
+      return Math.abs(a.relevance) - Math.abs(b.relevance);
+    });
+
+    // Interleave non-calendar items by source for variety
+    const calendarItems = withMeta.filter(i => i.item.source === 'calendar');
+    const otherItems = withMeta.filter(i => i.item.source !== 'calendar');
+    
+    const bySource: Map<string, typeof otherItems> = new Map();
+    otherItems.forEach(item => {
+      const source = item.item.source;
+      if (!bySource.has(source)) {
+        bySource.set(source, []);
+      }
+      bySource.get(source)!.push(item);
+    });
+
+    const interleavedOther: typeof otherItems = [];
+    const sources = [...bySource.values()];
+    let added = true;
+    while (added) {
+      added = false;
+      for (const sourceItems of sources) {
+        if (sourceItems.length > 0) {
+          interleavedOther.push(sourceItems.shift()!);
+          added = true;
+        }
+      }
+    }
+
+    // Calendar events first, then interleaved other items
+    return { dayItems: [...calendarItems, ...interleavedOther] };
+  }, [items, selectedDate, getItemDate, mode]);
+
+
+  const formatDateShort = (date: Date): string => {
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    if (date.toDateString() === today.toDateString()) return 'Today';
+    if (date.toDateString() === yesterday.toDateString()) return 'Yesterday';
+    if (date.toDateString() === tomorrow.toDateString()) return 'Tomorrow';
+    
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
 
   const formatViewedTime = (date: Date): string => {
     const now = new Date();
-    const diffMs = date.getTime() - now.getTime();
+    const diffMs = now.getTime() - date.getTime();
     const diffMins = Math.round(diffMs / 60000);
-    const diffHours = diffMs / 3600000;
-    const diffDays = diffMs / 86400000;
+    const diffHours = Math.round(diffMs / 3600000);
 
-    if (Math.abs(diffMins) < 30) return 'Now';
-    
-    if (diffMs < 0) {
-      const abs = Math.abs(diffHours);
-      if (abs < 1) return `${Math.abs(diffMins)}m ago`;
-      if (abs < 24) return `${Math.round(abs)}h ago`;
-      return `${Math.round(Math.abs(diffDays))}d ago`;
+    if (Math.abs(diffMins) < 5) return 'now';
+    if (diffMins > 0) {
+      if (diffMins < 60) return `${diffMins}m ago`;
+      if (diffHours < 24) return `${diffHours}h ago`;
+      return formatDateShort(date);
     } else {
-      if (diffHours < 1) return `in ${diffMins}m`;
-      if (diffHours < 24) return `in ${Math.round(diffHours)}h`;
-      return `in ${Math.round(diffDays)}d`;
+      const absMins = Math.abs(diffMins);
+      const absHours = Math.abs(diffHours);
+      if (absMins < 60) return `in ${absMins}m`;
+      if (absHours < 24) return `in ${absHours}h`;
+      return formatDateShort(date);
     }
   };
+
 
   const renderMasonryGrid = (
     itemsWithMeta: Array<{ item: MindItem; opacity: number; relevance: number }>,
@@ -229,22 +397,19 @@ export function MasonryTimeline({ items, onItemClick, onTimeChange, onItemDelete
       >
         {columnItems.map((column, colIndex) => (
           <div key={colIndex} className="flex flex-col gap-3">
-            <AnimatePresence mode="popLayout">
-              {column.map(({ item, opacity }, itemIndex) => (
+            <AnimatePresence mode="sync">
+              {column.map(({ item, opacity }) => (
                 <motion.div
                   key={item.id}
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0 }}
                   animate={{ 
                     opacity: draggedItemId === item.id ? 0.5 : opacity, 
-                    y: 0,
                     scale: draggedItemId === item.id ? 0.98 : 1,
                   }}
-                  exit={{ opacity: 0, scale: 0.95 }}
+                  exit={{ opacity: 0 }}
                   transition={{
-                    type: 'spring',
-                    stiffness: 400,
-                    damping: 30,
-                    delay: (colIndex * 0.02) + (itemIndex * 0.03),
+                    duration: 0.15,
+                    ease: 'easeOut',
                   }}
                   draggable
                   onDragStart={(e) => handleDragStart(e as unknown as React.DragEvent, item.id)}
@@ -255,6 +420,7 @@ export function MasonryTimeline({ items, onItemClick, onTimeChange, onItemDelete
                     opacity={draggedItemId === item.id ? 0.5 : opacity}
                     onClick={onItemClick}
                     onComplete={onItemComplete}
+                    onDefer={onItemDefer}
                     isDragging={draggedItemId === item.id}
                     isNew={item.id === newlyAddedId}
                   />
@@ -269,63 +435,172 @@ export function MasonryTimeline({ items, onItemClick, onTimeChange, onItemDelete
 
   return (
     <div ref={containerRef} className="relative min-h-screen">
-      {/* Fixed center time indicator - all elements locked together */}
-      <div 
-        className={`fixed left-0 right-0 top-1/2 z-40 transition-opacity duration-300 ${isInitialized ? 'opacity-100' : 'opacity-0'}`} 
-        style={{ transform: 'translateY(-50%)' }}
-      >
-        <div className="flex items-center h-8">
-          {/* Time label + dot on left - clickable to return to now */}
-          <button
-            onClick={() => scrollToNow(true)}
-            className={`
-              w-24 pr-3 flex items-center justify-end gap-2 font-mono text-sm font-medium
-              transition-opacity hover:opacity-100
-              ${isViewingNow ? 'text-white/70 pointer-events-none' : 'text-rose-400 cursor-pointer opacity-90'}
-            `}
-          >
-            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${isViewingNow ? 'bg-white/50 animate-pulse' : 'bg-rose-400'}`} />
-            <span>{formatViewedTime(viewedTime)}</span>
-          </button>
-          
-          {/* Horizontal line */}
-          <div className={`flex-1 h-px pointer-events-none ${isViewingNow ? 'bg-gradient-to-r from-white/30 via-white/20 to-transparent' : 'bg-gradient-to-r from-rose-500/50 via-rose-500/20 to-transparent'}`} />
-        </div>
-        
-      </div>
-
-      {/* Main content */}
-      <div className="ml-24 px-4 py-6">
-        {/* Extra scroll space at top for future */}
-        <div className="h-[30vh]" />
-        
-        {/* Future section - TOP (scroll up to see more future) */}
-        {futureItems.length > 0 && (
-          <section className="mb-4">
-            {renderMasonryGrid([...futureItems].reverse())}
-          </section>
-        )}
-
-        {/* NOW marker (invisible, used for position tracking) */}
-        <div 
-          ref={nowMarkerRef} 
-          className="relative h-24 flex items-center justify-center"
-        >
-          <div className="text-[10px] font-mono text-white/20 uppercase tracking-wider">
-            {isViewingNow ? '● present' : ''}
+      {/* Mode toggle & navigation - bottom left */}
+      <div className={`fixed bottom-6 left-6 z-40 transition-opacity duration-500 ${isInitialized ? 'opacity-100' : 'opacity-0'}`}>
+        <div className="flex items-center gap-2">
+          {/* Mode toggle */}
+          <div className="flex items-center bg-black/50 backdrop-blur-sm rounded-lg p-1">
+            <button
+              onClick={() => {
+                setMode('stream');
+                setTimeout(() => scrollToNow(false), 100);
+              }}
+              className={`p-1.5 rounded-md transition-colors ${mode === 'stream' ? 'bg-white/10 text-white/80' : 'text-white/40 hover:text-white/60'}`}
+              title="Stream view"
+            >
+              <Layers size={14} />
+            </button>
+            <button
+              onClick={() => {
+                setMode('day');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className={`p-1.5 rounded-md transition-colors ${mode === 'day' ? 'bg-white/10 text-white/80' : 'text-white/40 hover:text-white/60'}`}
+              title="Day view"
+            >
+              <CalendarDays size={14} />
+            </button>
           </div>
-        </div>
 
-        {/* Past section - BOTTOM (scroll down to see more past) */}
-        {pastItems.length > 0 && (
-          <section className="mt-4">
-            {renderMasonryGrid([...pastItems].reverse())}
-          </section>
-        )}
-        
-        {/* Extra scroll space at bottom for past */}
-        <div className="h-[50vh]" />
+          {/* Date/time navigation */}
+          {mode === 'day' ? (
+            <div className="flex items-center gap-0.5 bg-black/50 backdrop-blur-sm rounded-lg p-1">
+              <button
+                onClick={() => jumpDays(-1)}
+                className="p-1.5 rounded-lg hover:bg-white/10 transition-colors text-white/40 hover:text-white/70"
+                title="Previous day"
+              >
+                <ChevronLeft size={14} />
+              </button>
+              <button
+                onClick={goToToday}
+                className={`px-3 py-1.5 rounded-lg text-xs font-mono transition-colors ${isToday ? 'text-white/50' : 'text-white/70 hover:text-white hover:bg-white/10'}`}
+              >
+                {formatDateShort(selectedDate)}
+              </button>
+              <button
+                onClick={() => jumpDays(1)}
+                className="p-1.5 rounded-lg hover:bg-white/10 transition-colors text-white/40 hover:text-white/70"
+                title="Next day"
+              >
+                <ChevronRight size={14} />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={scrollToNow}
+              className={`px-3 py-1.5 bg-black/50 backdrop-blur-sm rounded-lg text-xs font-mono transition-colors ${isViewingNow ? 'text-white/50' : 'text-white/70 hover:text-white hover:bg-white/10'}`}
+            >
+              {isViewingNow ? 'now' : formatViewedTime(viewedTime)}
+            </button>
+          )}
+        </div>
       </div>
+
+      {/* Stream mode content */}
+      {mode === 'stream' && (
+        <>
+          {/* Fixed NOW bar in center of screen */}
+          <div 
+            className="fixed left-0 right-0 z-30 pointer-events-none px-6"
+            style={{ top: 'calc(50vh - 8px)' }}
+          >
+            <div className="flex items-center w-full">
+              {/* Left label with pulsing/static dot */}
+              <div className="flex items-center gap-2 mr-4 pointer-events-auto">
+                {isViewingNow ? (
+                  <motion.div 
+                    className="w-2 h-2 rounded-full bg-emerald-400"
+                    animate={{ 
+                      opacity: [0.4, 1, 0.4],
+                      scale: [0.9, 1.1, 0.9],
+                    }}
+                    transition={{ 
+                      duration: 2, 
+                      repeat: Infinity, 
+                      ease: "easeInOut" 
+                    }}
+                  />
+                ) : (
+                  <div className="w-2 h-2 rounded-full bg-rose-400/80" />
+                )}
+                <button
+                  onClick={scrollToNow}
+                  className={`text-[10px] font-mono uppercase tracking-wider transition-colors ${
+                    isViewingNow ? 'text-white/50' : 'text-rose-400/80 hover:text-rose-400 cursor-pointer'
+                  }`}
+                >
+                  {isViewingNow ? 'now' : formatViewedTime(viewedTime)}
+                </button>
+              </div>
+              
+              {/* The line */}
+              <div className={`flex-1 h-px transition-colors ${
+                isViewingNow 
+                  ? 'bg-gradient-to-r from-white/20 to-transparent' 
+                  : 'bg-gradient-to-r from-rose-400/30 to-transparent'
+              }`} />
+            </div>
+          </div>
+
+          <div className="px-6 py-6">
+            {/* Extra scroll space at top for future */}
+            <div className="h-[20vh]" />
+            
+            {/* Future section - TOP (scroll up to see more future) */}
+            {futureItems.length > 0 && (
+              <section className="mb-4">
+                {renderMasonryGrid([...futureItems].reverse())}
+              </section>
+            )}
+
+            {/* Invisible NOW marker for scroll tracking */}
+            <div ref={nowMarkerRef} className="h-4" />
+
+            {/* Past section - BOTTOM (scroll down to see more past) */}
+            {pastItems.length > 0 && (
+              <section className="mt-4">
+                {renderMasonryGrid(pastItems)}
+              </section>
+            )}
+            
+            {/* Extra scroll space at bottom for past */}
+            <div className="h-[50vh]" />
+          </div>
+        </>
+      )}
+
+      {/* Day mode content */}
+      {mode === 'day' && (
+        <div className="px-6 py-6">
+          {/* Date header */}
+          <div className="mb-6">
+            <h2 className="text-lg font-medium text-white/80">
+              {formatDateShort(selectedDate)}
+            </h2>
+            <p className="text-sm text-white/40 mt-0.5">
+              {dayItems.length} {dayItems.length === 1 ? 'item' : 'items'}
+            </p>
+          </div>
+
+          {/* Items grid */}
+          {dayItems.length > 0 ? (
+            <section>
+              {renderMasonryGrid(dayItems)}
+            </section>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+              <div className="text-white/30 text-sm">No items for this day</div>
+              <button 
+                onClick={goToToday}
+                className="mt-4 text-xs text-white/50 hover:text-white/70 transition-colors"
+              >
+                Go to Today
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Trash Zone - appears when dragging */}
       <AnimatePresence>

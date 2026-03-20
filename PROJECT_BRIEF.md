@@ -56,7 +56,29 @@ INDEX offers six view modes, each solving a different problem:
 ### Timeline
 *"What's happening across my work?"*
 
-A time-anchored masonry grid of all items. Scroll up for the future, down for the past. A horizontal "now" line marks the present. This is the ambient awareness view—everything at a glance.
+A time-anchored masonry grid of all items. Two viewing modes, toggled via icons in the bottom-left:
+
+**Stream Mode** (default)
+- Continuous vertical scroll: future items above, past items below
+- A fixed horizontal "now" line marks the present, always centered on screen
+- The line pulses green when viewing the present; turns red and shows time offset when scrolled away (e.g., "2h ago", "in 3h")
+- Click the time label to snap back to now
+- Calendar events positioned by start time; other items by last-touched time
+
+**Day Mode**
+- Shows items relevant to a specific day with left/right navigation
+- Calendar events: scheduled for that day
+- Slack/Drive items surfaced by recency and importance:
+  - **Today**: Recent items (last 48h) OR high priority (≥4)
+  - **Tomorrow**: High priority items for prep
+  - **Yesterday**: Items actually touched that day
+  - **Omnibar items**: Always show on today/yesterday (manually added = important)
+- Calendar events appear first (sorted by time), then other items sorted by priority → recency
+- Items interleaved by source for visual variety
+
+**Item Actions** (on hover)
+- ✓ Complete: removes item from view
+- → Defer: moves item to tomorrow (sets to 9 AM next day)
 
 ### Focus
 *"What should I do next?"*
@@ -71,7 +93,23 @@ Upcoming meetings with auto-surfaced context: related items by attendee and proj
 ### Projects
 *"How are my projects doing?"*
 
-Health and momentum by #hashtag. See which projects are active, which are stalled, which need decisions. Momentum indicators show whether activity is rising, steady, or falling.
+Health and momentum by #hashtag. Projects are automatically grouped from item tags.
+
+**Filters** (tab bar):
+- **Active**: Non-hidden projects with recent activity (default)
+- **Needs Attention**: Projects that are stale, blocked, OR have pending decisions
+- **Hidden**: Projects you've manually hidden from view
+
+**Sorting**: By activity (most recent), by item count, or by status
+
+**Project Cards** show:
+- Status indicator (active/stale/blocked)
+- Momentum arrow (↑ rising, → steady, ↓ falling)
+- Open item count
+- Pending decisions
+- Last activity time
+
+**Actions**: Click eye icon to hide/show projects. Hidden projects can be restored from the Hidden filter.
 
 ### Digest
 *"What happened today?"*
@@ -209,6 +247,9 @@ Drag cards to reorder. Drag to trash to delete. Click the time indicator to retu
 ### One-Click to Source
 Every item links back to its source. Click to open the Slack thread, Figma file, or Google Doc. INDEX is a synthesis layer, not a replacement for source tools.
 
+### Keyboard First
+Number keys (1-6) switch between views instantly. ⌘K opens OmniBar. Keyboard users should never need to reach for the mouse for primary navigation.
+
 ---
 
 ## Technical Guidelines
@@ -234,11 +275,16 @@ Data ingestion uses MCP (Model Context Protocol). Each source has a correspondin
 ### What's Working
 - Six-view architecture with consistent design language
 - Intelligence layer with priority scoring and commitment extraction
-- Time-anchored masonry timeline with scroll-synced "now" line
+- Timeline with two modes: Stream (scroll-based) and Day (date-filtered)
+- Fixed "now" line that responds to scroll position (green/pulsing → red/time offset)
+- Day view with intelligent item surfacing (recency + priority, not just date)
 - Meeting companion with context surfacing
+- Projects view with filters (Active/Needs Attention/Hidden) and sorting
 - OmniBar with hashtag detection
-- Action buttons for opening source apps and completing items
-- localStorage persistence
+- Item actions: Complete (remove), Defer (move to tomorrow), Open (source link)
+- Drag-to-trash for item deletion
+- Keyboard shortcuts (1-6) for view switching
+- localStorage persistence with version-based refresh
 
 ### Near-Term Focus
 - Live MCP data fetching (currently using representative mock data)

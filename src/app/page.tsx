@@ -123,7 +123,7 @@ function getItemThumbnail(item: MindItem): string | null {
 
 const STORAGE_KEY = 'index-items';
 const STORAGE_VERSION_KEY = 'index-version';
-const CURRENT_VERSION = '6'; // Bump this to force refresh
+const CURRENT_VERSION = '9'; // Bump this to force refresh
 
 const validViewModes: ViewMode[] = ['timeline', 'focus', 'meetings', 'projects', 'digest', 'commitments'];
 
@@ -188,6 +188,27 @@ export default function Home() {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, [viewMode]);
+
+  // Keyboard shortcuts 1-6 for view modes
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if typing in an input
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+      
+      const key = e.key;
+      if (key >= '1' && key <= '6') {
+        const index = parseInt(key) - 1;
+        if (viewModes[index]) {
+          setViewMode(viewModes[index].id);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [setViewMode]);
 
   // Computed intelligence
   const upcomingMeetings = useMemo(() => getUpcomingMeetings(items, 8), [items]);
@@ -398,6 +419,19 @@ export default function Home() {
     setExpandedItem(null);
   }, []);
 
+  const handleItemDefer = useCallback((item: MindItem) => {
+    // Defer item to tomorrow by updating lastTouchedAt to tomorrow
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(9, 0, 0, 0); // Set to 9 AM tomorrow
+    
+    setItems(prev => prev.map(i => 
+      i.id === item.id 
+        ? { ...i, lastTouchedAt: tomorrow.toISOString() }
+        : i
+    ));
+  }, []);
+
   const handleUpdateItemTitle = useCallback((itemId: string, newTitle: string) => {
     setItems(prev => prev.map(item => 
       item.id === itemId ? { ...item, title: newTitle } : item
@@ -414,6 +448,7 @@ export default function Home() {
           onTimeChange={handleTimeChange}
           onItemDelete={handleItemDelete}
           onItemComplete={handleItemComplete}
+          onItemDefer={handleItemDefer}
           newlyAddedId={newlyAddedId}
         />
       );

@@ -6,13 +6,26 @@ import { MindItem } from './types';
 // Last synced: March 19, 2026
 // ═══════════════════════════════════════════════════════════════════════════
 
-const now = new Date();
-const minsAgo = (m: number) => new Date(now.getTime() - m * 60 * 1000).toISOString();
-const hoursAgo = (h: number) => new Date(now.getTime() - h * 60 * 60 * 1000).toISOString();
-const daysAgo = (d: number) => new Date(now.getTime() - d * 24 * 60 * 60 * 1000).toISOString();
+// Dynamic time helpers - recalculated on each access
+const getNow = () => new Date();
+const minsAgo = (m: number) => new Date(getNow().getTime() - m * 60 * 1000).toISOString();
+const hoursAgo = (h: number) => new Date(getNow().getTime() - h * 60 * 60 * 1000).toISOString();
+const daysAgo = (d: number) => new Date(getNow().getTime() - d * 24 * 60 * 60 * 1000).toISOString();
 
-// Helper to create ISO date strings for specific times
-const atTime = (dateStr: string) => new Date(dateStr).toISOString();
+// Create date for today at a specific hour
+const todayAt = (hour: number, min: number = 0) => {
+  const d = new Date();
+  d.setHours(hour, min, 0, 0);
+  return d.toISOString();
+};
+
+// Create date for tomorrow at a specific hour  
+const tomorrowAt = (hour: number, min: number = 0) => {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  d.setHours(hour, min, 0, 0);
+  return d.toISOString();
+};
 
 export const mockItems: MindItem[] = [
   // ═══════════════════════════════════════════════════════════════════════
@@ -30,8 +43,8 @@ export const mockItems: MindItem[] = [
       source: 'calendar',
       meta: {
         eventType: 'crit',
-        startsAt: '2026-03-20T09:30:00-07:00',
-        endsAt: '2026-03-20T10:15:00-07:00',
+        startsAt: todayAt(9, 30),
+        endsAt: todayAt(10, 15),
         tetheredArtifacts: ['http://go/pd/craft/agenda'],
         attendees: [
           { name: 'swanson@stripe.com' },
@@ -43,7 +56,7 @@ export const mockItems: MindItem[] = [
       },
     },
     createdAt: daysAgo(7),
-    lastTouchedAt: hoursAgo(1),
+    lastTouchedAt: todayAt(8, 0),
   },
   {
     id: 'cal-craft-crit-2',
@@ -57,8 +70,8 @@ export const mockItems: MindItem[] = [
       source: 'calendar',
       meta: {
         eventType: 'crit',
-        startsAt: '2026-03-20T10:15:00-07:00',
-        endsAt: '2026-03-20T11:00:00-07:00',
+        startsAt: todayAt(10, 15),
+        endsAt: todayAt(11, 0),
         tetheredArtifacts: ['http://go/pd/craft/agenda', 'https://stripe.zoom.us/j/98503893123'],
         attendees: [
           { name: 'swanson@stripe.com' },
@@ -68,7 +81,7 @@ export const mockItems: MindItem[] = [
       },
     },
     createdAt: daysAgo(7),
-    lastTouchedAt: hoursAgo(1),
+    lastTouchedAt: todayAt(8, 0),
   },
   {
     id: 'cal-payintel-review',
@@ -82,8 +95,8 @@ export const mockItems: MindItem[] = [
       source: 'calendar',
       meta: {
         eventType: 'standup',
-        startsAt: '2026-03-20T10:30:00-07:00',
-        endsAt: '2026-03-20T11:30:00-07:00',
+        startsAt: todayAt(10, 30),
+        endsAt: todayAt(11, 30),
         tetheredArtifacts: [
           'https://docs.google.com/spreadsheets/d/1PXbJtq4vKP07e1bFzXq112ybabL0r8OaP7LBom8EC5I/edit',
           'https://stripe.zoom.us/j/96169299256',
@@ -92,7 +105,7 @@ export const mockItems: MindItem[] = [
       },
     },
     createdAt: daysAgo(30),
-    lastTouchedAt: hoursAgo(2),
+    lastTouchedAt: todayAt(8, 0),
   },
   {
     id: 'cal-ian-catchup',
@@ -106,14 +119,14 @@ export const mockItems: MindItem[] = [
       source: 'calendar',
       meta: {
         eventType: 'oneOnOne',
-        startsAt: '2026-03-20T11:00:00-07:00',
-        endsAt: '2026-03-20T11:30:00-07:00',
+        startsAt: todayAt(11, 0),
+        endsAt: todayAt(11, 30),
         tetheredArtifacts: ['https://stripe.zoom.us/j/96381176120'],
         attendees: [{ name: 'iancollins@stripe.com' }],
       },
     },
     createdAt: daysAgo(14),
-    lastTouchedAt: hoursAgo(1),
+    lastTouchedAt: todayAt(8, 0),
   },
   {
     id: 'cal-dispute-demo',
@@ -127,8 +140,8 @@ export const mockItems: MindItem[] = [
       source: 'calendar',
       meta: {
         eventType: 'crit',
-        startsAt: '2026-03-20T12:30:00-07:00',
-        endsAt: '2026-03-20T13:00:00-07:00',
+        startsAt: todayAt(12, 30),
+        endsAt: todayAt(13, 0),
         tetheredArtifacts: [
           'https://docs.google.com/document/d/1UJVN9ivBsgRK7lmcWk2SQuOMqFX7dIwQdkI6A7V__2s/edit',
           'https://stripe.zoom.us/j/92794948960',
@@ -143,7 +156,7 @@ export const mockItems: MindItem[] = [
       },
     },
     createdAt: daysAgo(3),
-    lastTouchedAt: hoursAgo(1),
+    lastTouchedAt: todayAt(8, 0),
   },
   {
     id: 'cal-smart-refunds',
@@ -157,8 +170,8 @@ export const mockItems: MindItem[] = [
       source: 'calendar',
       meta: {
         eventType: 'standup',
-        startsAt: '2026-03-20T13:30:00-07:00',
-        endsAt: '2026-03-20T13:55:00-07:00',
+        startsAt: todayAt(13, 30),
+        endsAt: todayAt(13, 55),
         tetheredArtifacts: [
           'https://docs.google.com/document/d/1lMX9KNMH9wf8AQX_IlDB9B50f2TepuTDQov14j41qzY/edit',
           'https://stripe.zoom.us/j/99388746795',
@@ -171,7 +184,7 @@ export const mockItems: MindItem[] = [
       },
     },
     createdAt: daysAgo(30),
-    lastTouchedAt: hoursAgo(1),
+    lastTouchedAt: todayAt(8, 0),
   },
   {
     id: 'cal-sr-updates',
@@ -185,14 +198,14 @@ export const mockItems: MindItem[] = [
       source: 'calendar',
       meta: {
         eventType: 'focus',
-        startsAt: '2026-03-20T14:30:00-07:00',
-        endsAt: '2026-03-20T15:00:00-07:00',
+        startsAt: todayAt(14, 30),
+        endsAt: todayAt(15, 0),
         tetheredArtifacts: [],
         attendees: [],
       },
     },
     createdAt: daysAgo(1),
-    lastTouchedAt: hoursAgo(1),
+    lastTouchedAt: todayAt(8, 0),
   },
   {
     id: 'cal-jamming',
@@ -206,14 +219,14 @@ export const mockItems: MindItem[] = [
       source: 'calendar',
       meta: {
         eventType: 'focus',
-        startsAt: '2026-03-20T15:00:00-07:00',
-        endsAt: '2026-03-20T15:45:00-07:00',
+        startsAt: todayAt(15, 0),
+        endsAt: todayAt(15, 45),
         tetheredArtifacts: ['https://stripe.zoom.us/j/92713647039'],
         attendees: [{ name: 'yuhsin@stripe.com' }],
       },
     },
     createdAt: daysAgo(1),
-    lastTouchedAt: hoursAgo(1),
+    lastTouchedAt: todayAt(8, 0),
   },
   {
     id: 'cal-apollo-standup',
@@ -227,8 +240,8 @@ export const mockItems: MindItem[] = [
       source: 'calendar',
       meta: {
         eventType: 'standup',
-        startsAt: '2026-03-21T08:45:00-07:00',
-        endsAt: '2026-03-21T09:00:00-07:00',
+        startsAt: tomorrowAt(8, 45),
+        endsAt: tomorrowAt(9, 0),
         tetheredArtifacts: [
           'https://docs.google.com/document/d/1F4nY_i-9tEevcVM0uuOxENIoja03hRJNS4toqi3TovE/edit',
           'https://stripe.zoom.us/j/99161809057',
@@ -241,7 +254,7 @@ export const mockItems: MindItem[] = [
       },
     },
     createdAt: daysAgo(30),
-    lastTouchedAt: hoursAgo(1),
+    lastTouchedAt: todayAt(8, 0),
   },
   {
     id: 'cal-friday-fireside',
@@ -255,14 +268,14 @@ export const mockItems: MindItem[] = [
       source: 'calendar',
       meta: {
         eventType: 'external',
-        startsAt: '2026-03-21T09:00:00-07:00',
-        endsAt: '2026-03-21T10:00:00-07:00',
+        startsAt: tomorrowAt(9, 0),
+        endsAt: tomorrowAt(10, 0),
         tetheredArtifacts: ['https://go/stripetv/live'],
         attendees: [],
       },
     },
     createdAt: daysAgo(7),
-    lastTouchedAt: hoursAgo(1),
+    lastTouchedAt: todayAt(8, 0),
   },
 
   // ═══════════════════════════════════════════════════════════════════════
@@ -285,8 +298,8 @@ export const mockItems: MindItem[] = [
         channel: 'DM',
       },
     },
-    createdAt: minsAgo(30),
-    lastTouchedAt: minsAgo(30),
+    createdAt: todayAt(8, 30),
+    lastTouchedAt: todayAt(8, 30),
   },
   {
     id: 'slack-handoff',
@@ -305,8 +318,8 @@ export const mockItems: MindItem[] = [
         channel: 'mpdm-disputes',
       },
     },
-    createdAt: minsAgo(60),
-    lastTouchedAt: minsAgo(60),
+    createdAt: todayAt(9, 15),
+    lastTouchedAt: todayAt(9, 15),
   },
   {
     id: 'slack-smart-disputes-research',
@@ -325,8 +338,8 @@ export const mockItems: MindItem[] = [
         channel: '#radar-disputes',
       },
     },
-    createdAt: hoursAgo(1),
-    lastTouchedAt: hoursAgo(1),
+    createdAt: todayAt(10, 0),
+    lastTouchedAt: todayAt(10, 0),
   },
   {
     id: 'slack-designing-ai',
@@ -345,8 +358,8 @@ export const mockItems: MindItem[] = [
         channel: '#designing-ai',
       },
     },
-    createdAt: hoursAgo(2),
-    lastTouchedAt: hoursAgo(2),
+    createdAt: todayAt(11, 0),
+    lastTouchedAt: todayAt(11, 0),
   },
 
   // ═══════════════════════════════════════════════════════════════════════
@@ -365,12 +378,12 @@ export const mockItems: MindItem[] = [
       meta: {
         docTitle: 'Radar design strategy',
         executiveSummary: 'Strategic design direction for Radar product',
-        lastEditors: [{ name: 'Ryan Spencer', editedAt: hoursAgo(4) }],
+        lastEditors: [{ name: 'Ryan Spencer', editedAt: todayAt(9, 0) }],
         webUrl: 'https://docs.google.com/document/d/1goBEpIar-rL9d9KvPBr-cP4uRdQUF_aDqud-_Dxr0T8/edit',
       },
     },
     createdAt: daysAgo(10),
-    lastTouchedAt: hoursAgo(4),
+    lastTouchedAt: todayAt(9, 0),
   },
   {
     id: 'drive-radar-planning',
@@ -385,12 +398,12 @@ export const mockItems: MindItem[] = [
       meta: {
         docTitle: 'Notes - Radar Design: Planning & Sync',
         executiveSummary: 'Weekly planning notes for design team',
-        lastEditors: [{ name: 'Ryan Spencer', editedAt: hoursAgo(4) }],
+        lastEditors: [{ name: 'Ryan Spencer', editedAt: todayAt(10, 30) }],
         webUrl: 'https://docs.google.com/document/d/1qKmbHpjI8CGx4j9TNHRCJFttT5PYX-oZVv2Xa1PNoLs/edit',
       },
     },
     createdAt: daysAgo(120),
-    lastTouchedAt: hoursAgo(4),
+    lastTouchedAt: todayAt(10, 30),
   },
   {
     id: 'drive-radar-prototype',
@@ -405,12 +418,12 @@ export const mockItems: MindItem[] = [
       meta: {
         docTitle: 'Radar overview prototype analysis',
         executiveSummary: 'Prototype analysis and findings',
-        lastEditors: [{ name: 'Ryan Spencer', editedAt: daysAgo(1) }],
+        lastEditors: [{ name: 'Ryan Spencer', editedAt: todayAt(14, 0) }],
         webUrl: 'https://docs.google.com/document/d/1jvWFjLtp7ohi8vn-jptgKqu307L0SaAiMu_sJWgz1z0/edit',
       },
     },
     createdAt: daysAgo(1),
-    lastTouchedAt: daysAgo(1),
+    lastTouchedAt: todayAt(14, 0),
   },
   {
     id: 'drive-radar-ux-brief',
@@ -425,12 +438,12 @@ export const mockItems: MindItem[] = [
       meta: {
         docTitle: 'Radar Overview/Performance: UX Brief',
         executiveSummary: 'Design brief for overview and performance',
-        lastEditors: [{ name: 'Ryan Spencer', editedAt: daysAgo(50) }],
+        lastEditors: [{ name: 'Ryan Spencer', editedAt: todayAt(11, 30) }],
         webUrl: 'https://docs.google.com/document/d/1l4rj4_0acf8Xtb1IGcDGkv5M2gmLdSbeuKL4sga2TBQ/edit',
       },
     },
     createdAt: daysAgo(95),
-    lastTouchedAt: daysAgo(50),
+    lastTouchedAt: todayAt(11, 30),
   },
   {
     id: 'drive-radar-journeys',
@@ -445,12 +458,12 @@ export const mockItems: MindItem[] = [
       meta: {
         docTitle: 'Radar User Journey',
         executiveSummary: 'User journey documentation',
-        lastEditors: [{ name: 'Ryan Spencer', editedAt: daysAgo(100) }],
+        lastEditors: [{ name: 'Ryan Spencer', editedAt: todayAt(12, 0) }],
         webUrl: 'https://docs.google.com/document/d/1SdKA7OIfqp5f4WAoKfvx8w1Z5VVwr1gr4JqTmJt8sm4/edit',
       },
     },
     createdAt: daysAgo(130),
-    lastTouchedAt: daysAgo(100),
+    lastTouchedAt: todayAt(12, 0),
   },
   {
     id: 'drive-future-radar',
@@ -465,12 +478,12 @@ export const mockItems: MindItem[] = [
       meta: {
         docTitle: 'Future of Radar • Mar 11, 2026',
         executiveSummary: 'Future vision and roadmap',
-        lastEditors: [{ name: 'Ryan Spencer', editedAt: daysAgo(8) }],
+        lastEditors: [{ name: 'Ryan Spencer', editedAt: todayAt(13, 0) }],
         webUrl: 'https://docs.google.com/document/d/1wAZCTsf5XyvgrDubEAauk9hRsEHvWMLGYCGDjWShWBk/edit',
       },
     },
     createdAt: daysAgo(10),
-    lastTouchedAt: daysAgo(8),
+    lastTouchedAt: todayAt(13, 0),
   },
   {
     id: 'drive-radar-design-review',
@@ -485,12 +498,12 @@ export const mockItems: MindItem[] = [
       meta: {
         docTitle: 'Notes - Radar Design Review, weekly',
         executiveSummary: 'Design review meeting notes',
-        lastEditors: [{ name: 'Ryan Spencer', editedAt: daysAgo(28) }],
+        lastEditors: [{ name: 'Ryan Spencer', editedAt: todayAt(8, 45) }],
         webUrl: 'https://docs.google.com/document/d/18HAr0M5l_VeNhtkvkabruoH-6fP7roav6GPw9GN0zPg/edit',
       },
     },
     createdAt: daysAgo(125),
-    lastTouchedAt: daysAgo(28),
+    lastTouchedAt: todayAt(8, 45),
   },
 ];
 

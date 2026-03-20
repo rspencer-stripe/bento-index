@@ -13,6 +13,7 @@ import {
   Hash,
   ExternalLink,
   Check,
+  ArrowRight,
   MoreHorizontal,
 } from 'lucide-react';
 import { MindItem, ItemSource, SlackMeta, FigmaMeta, DriveMeta, WebMeta, ZoomMeta, CalendarMeta } from '@/lib/types';
@@ -104,6 +105,7 @@ interface ItemCardProps {
   opacity?: number;
   onClick?: (item: MindItem) => void;
   onComplete?: (item: MindItem) => void;
+  onDefer?: (item: MindItem) => void;
   isDragging?: boolean;
   isNew?: boolean;
   showActions?: boolean;
@@ -114,6 +116,7 @@ export function ItemCard({
   opacity = 1, 
   onClick, 
   onComplete,
+  onDefer,
   isDragging = false, 
   isNew = false,
   showActions = true,
@@ -274,7 +277,19 @@ export function ItemCard({
                   <ExternalLink size={12} className="text-white/50" />
                 </button>
               )}
-              {(item.type === 'task' || item.type === 'note') && onComplete && (
+              {onDefer && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDefer(item);
+                  }}
+                  className="p-1.5 rounded-lg bg-white/5 hover:bg-amber-500/20 transition-colors group"
+                  title="Defer to tomorrow"
+                >
+                  <ArrowRight size={12} className="text-white/50 group-hover:text-amber-400" />
+                </button>
+              )}
+              {onComplete && (
                 <button
                   onClick={(e) => {
                     e.stopPropagation();

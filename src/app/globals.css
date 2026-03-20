@@ -113,3 +113,10 @@ input:focus-visible {
 .transition-opacity {
   transition: opacity 0.3s ease;
 }
+
+/* Hide Next.js dev indicator */
+nextjs-portal,
+[data-nextjs-dialog-overlay],
+[data-nextjs-toast] {
+  display: none !important;
+}

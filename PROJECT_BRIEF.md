@@ -31,6 +31,68 @@ INDEX should feel like a brilliant assistant who has already:
 
 ---
 
+## Top 10 Flows
+
+These flows demonstrate the promise of INDEX—moments where it transforms fragmented context into immediate clarity.
+
+### 1. The 5-Minute Meeting Prep
+*You have a 1:1 with Katie in 10 minutes.*
+
+A banner appears at the top of your screen: "Ryan / Katie in 10m". You tap "Prep" and a panel slides out showing:
+- The 3 Slack threads you've had with Katie this week
+- The Figma file you both commented on yesterday
+- An open question extracted from your last conversation: "What's the timeline for the SKU refresh?"
+- A link to your shared 1:1 doc
+
+You walk into the meeting knowing exactly what to discuss—without opening Slack, searching Drive, or trying to remember what happened last time.
+
+### 2. The "What Was That Thing?" Recovery
+*Someone mentioned a doc in Slack last week. You need it now.*
+
+Instead of searching Slack, then Drive, then asking the person again—you open INDEX, scroll back in the Timeline to last Thursday, and see the Drive doc sitting right there next to the Slack message that mentioned it. One click opens it.
+
+### 3. The Morning Scan
+*You sit down with coffee. What happened overnight?*
+
+The Day View shows you Today's board: 3 meetings, 2 Slack threads marked "WAITING" (someone needs your input), a Figma file that was updated, and a high-priority note you added yesterday about the Radar overview. In 30 seconds, you know the shape of your day.
+
+### 4. The Commitment Catch
+*Three days ago you said "I'll send that by Friday."*
+
+The Commitments view shows it, highlighted as overdue. You didn't forget—INDEX remembered for you. You complete the task and mark it done, or you defer it to tomorrow with one click.
+
+### 5. The Natural Language Schedule
+*You need to find time with someone.*
+
+You press ⌘K, type "Schedule 30 minutes with Jacob Meltzer", and hit Enter. INDEX parses your intent, shows you 5 available slots in the next week (scored by meeting-free time and calendar patterns), and creates the event when you pick one. No switching to Calendar, no back-and-forth emails.
+
+### 6. The Project Pulse Check
+*Is the Radar project stuck?*
+
+You press "4" to jump to Projects. The Radar card shows: 12 items, momentum rising (↑), last activity 2 hours ago. But there's a warning: "2 pending decisions." You tap the card and see exactly which items are blocked. The project isn't stuck—it's waiting on two specific choices.
+
+### 7. The Quick Capture
+*Someone shares a link in conversation. You'll need it later.*
+
+You press ⌘K, paste the URL, add "#Disputes", hit Enter. The link is captured, tagged, and timestamped. Later, when you're working on Disputes, it's there waiting for you—no bookmark folders, no "where did I put that?" panic.
+
+### 8. The End-of-Day Digest
+*It's 5:30pm. What happened today?*
+
+The Digest view shows: 14 items touched, 3 meetings attended, 2 commitments made, 1 still open (high priority). Tomorrow's preview: 4 meetings including "Radar Staff Weekly"—and INDEX has already surfaced the related items you'll need.
+
+### 9. The Stale Item Nudge
+*A P5 item has been sitting untouched for 5 days.*
+
+An amber alert appears at the bottom of your screen: "1 P5 item needs attention." You tap it and see the item, why it's important, and a suggested action: "Follow up—related items in #Radar are still active." You either handle it or consciously defer it. Nothing slips through the cracks.
+
+### 10. The Context Handoff
+*You're picking up where you left off yesterday.*
+
+You open INDEX and the Timeline is already scrolled to "now". Looking up, you see tomorrow's meetings. Looking down, you see yesterday's activity—the Figma file you were reviewing, the Slack thread you were in, the doc you edited. The context is spatial and temporal. You don't have to remember what you were doing; you can *see* it.
+
+---
+
 ## How It Works
 
 INDEX operates in four stages:

@@ -212,7 +212,7 @@ export function CommitmentTracker({
         <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4">
           <CheckCircle size={28} strokeWidth={1.5} className="text-white/50" />
         </div>
-        <h3 className="text-lg font-medium text-white/50 mb-2">No open commitments</h3>
+        <h3 className="text-lg font-medium text-white/70 mb-2">No open commitments</h3>
         <p className="text-sm text-white/40 max-w-sm">
           We scan your Slack messages for phrases like "I'll..." or "Let me..." to track follow-ups.
         </p>

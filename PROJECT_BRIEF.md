@@ -98,16 +98,34 @@ You open INDEX and the Timeline is already scrolled to "now". Looking up, you se
 INDEX operates in four stages:
 
 ### 1. Ingestion
-Data flows in from your work tools—Slack, Figma, Google Drive, Calendar, Zoom—via MCP (Model Context Protocol) integrations. Each source contributes a different type of context.
+Data flows in from your work tools via MCP (Model Context Protocol) when running in Cursor:
+- **Google Calendar** — Events, attendees, video links
+- **Google Drive** — Docs, sheets, presentations with edit history
+- **Slack** — Messages, threads, channels
+- **Internal Search** — Wiki and documentation
+- **Web Search** — External context
+
+Data is fetched via MCP tools and stored in `src/lib/realData.ts` for live mode.
 
 ### 2. Normalization
-Every piece of context becomes a **MindItem**—a unified representation regardless of source. A Slack thread, a Figma file, and a calendar event all speak the same language internally.
+Every piece of context becomes a **MindItem**—a unified representation regardless of source. A Slack thread, a Figma file, and a calendar event all speak the same language internally. Source-specific metadata lives in typed `sourceMeta` fields.
 
 ### 3. Intelligence
-The intelligence layer processes MindItems to derive meaning: scoring priority, detecting urgency, extracting commitments, surfacing relationships. This is where raw data becomes actionable insight.
+The intelligence layer (`src/lib/intelligence.ts`) processes MindItems to derive meaning:
+- Priority scoring based on recency, urgency signals, and explicit priority
+- Commitment extraction from natural language
+- Meeting prep generation linking attendees to related items
+- Stale item detection and nudges
+- Cross-item relationship mapping
 
 ### 4. Presentation
-Multiple "lenses" let you view your context from different angles. The same underlying data, presented for different needs: focus, preparation, review, planning.
+Six "lenses" let you view your context from different angles:
+- **Timeline** — Temporal masonry of all items (Stream/Day modes)
+- **Focus** — Single most important action right now
+- **Meetings** — Upcoming meetings with auto-surfaced context
+- **Projects** — Health and momentum by #hashtag
+- **Digest** — End-of-day summary
+- **Commitments** — Auto-extracted promises to track
 
 ---
 
@@ -396,10 +414,94 @@ Every piece of context normalizes to a MindItem. Source-specific metadata lives 
 The intelligence layer (`intelligence.ts`) contains pure functions that take MindItems and return derived data. No side effects, no state. This makes the logic testable and predictable.
 
 ### Local-First, Sync-Ready
-Day 1 uses localStorage for persistence. The architecture assumes eventual sync: items have stable IDs, timestamps are ISO strings, state is serializable.
+Zustand store manages application state with localStorage persistence. IndexedDB provides client-side caching for offline support. Items have stable IDs, timestamps are ISO strings, state is serializable.
 
 ### MCP for Integration
-Data ingestion uses MCP (Model Context Protocol). Each source has a corresponding MCP server with typed tools. This provides a consistent integration pattern across all data sources.
+Data ingestion uses MCP (Model Context Protocol) when running in Cursor. Each source has a corresponding MCP server with typed tools. This provides a consistent integration pattern across all data sources.
+
+---
+
+## Architecture
+
+### Data Modes
+
+INDEX supports two modes, toggled via ⌘⇧D or the header indicator:
+
+**Demo Mode** (default)
+- Curated sample data showcasing all features
+- Perfect for demos and exploration
+- Data source: `src/lib/liveData.ts`
+
+**Live Mode**
+- Real data from your actual work tools
+- Updated via MCP when running in Cursor
+- Data source: `src/lib/realData.ts`
+
+### MCP Integrations
+
+When running in Cursor, INDEX connects to these MCP servers:
+
+| Server | Tools | Data |
+|--------|-------|------|
+| `user-google calendar` | 77 tools | Calendar events, scheduling |
+| `user-google drive` | 70 tools | Docs, sheets, presentations |
+| `user-toolshed_extras` | 439 tools | Slack messages, Figma files |
+| `user-internal search` | 70 tools | Internal wiki and documentation |
+| `user-web_search` | 76 tools | External context and research |
+
+### Data Flow
+
+```
+MCP Tools → realData.ts → dataProvider.ts → Zustand Store → UI Components
+                                    ↓
+                              IndexedDB Cache
+```
+
+**Key Files:**
+- `src/lib/realData.ts` — Pre-fetched live data from MCP calls
+- `src/lib/liveData.ts` — Curated demo data
+- `src/lib/dataProvider.ts` — Mode switching and data fetching
+- `src/lib/store/index.ts` — Zustand store for global state
+- `src/lib/sync/idb.ts` — IndexedDB caching layer
+
+### State Management
+
+Zustand store (`src/lib/store/index.ts`) manages:
+- Items array (MindItem[])
+- Current view mode
+- User preferences
+- Integration status
+- Meeting prep state
+
+State persists to localStorage via Zustand middleware.
+
+### Plugin Architecture
+
+Integrations follow a plugin pattern (`src/lib/integrations/`):
+- `types.ts` — Interface definitions
+- `base.ts` — Abstract BaseIntegration class
+- `google-calendar.ts` — Calendar integration
+- `slack.ts` — Slack integration
+- `registry.ts` — Integration registration and management
+
+### Deployment
+
+**Development:**
+```bash
+npm run dev  # Runs on localhost:3000
+```
+
+**Production:**
+- Vercel: https://bento-index.vercelapp.stripe.dev
+- GitHub: https://github.com/rspencer-stripe/bento-index
+- Corp Git: https://git.corp.stripe.com/rspencer/bento-index
+
+**Environment Variables (for deployed apps without MCP):**
+```
+GOOGLE_ACCESS_TOKEN=<your_token>
+SLACK_BOT_TOKEN=xoxb-<your_token>
+FIGMA_ACCESS_TOKEN=<your_token>
+```
 
 ---
 
@@ -490,18 +592,37 @@ Each journey maps to the Top 10 Flows that demonstrate INDEX's promise.
 **Foundation**
 - Six-view architecture (Timeline, Focus, Meetings, Projects, Digest, Commitments)
 - Keyboard shortcuts 1-6 for instant view switching
-- Live data from Calendar, Slack, Drive via MCP
-- localStorage persistence with version-based refresh
+- Demo/Live mode toggle (⌘⇧D) with visual indicator
+- Zustand store for state management with localStorage persistence
+- IndexedDB caching layer for offline support
+- Plugin-based integration architecture
+
+**Data Sources (Live Mode)**
+- Google Calendar via `user-google calendar` MCP (77 tools)
+- Google Drive via `user-google drive` MCP (70 tools)
+- Slack via `user-toolshed_extras` MCP (439 tools)
+- Internal Search via `user-internal search` MCP (70 tools)
+- Web Search via `user-web_search` MCP (76 tools)
+
+**Infrastructure**
+- Next.js 15 with Turbopack
+- Vercel deployment at bento-index.vercelapp.stripe.dev
+- GitHub sync: rspencer-stripe/bento-index
+- Settings page showing all MCP connection status
+
+**Design System**
 - Consistent dark design language across all views
 - Refined header toolbar: larger icons, better spacing, subtle state indicators
 - Empty states with crisp icons and clear messaging
 - Smooth opacity transitions eliminate layout flash on load
+- Framer Motion for high-tension animations
 
 ### Near-Term Focus
 - Inline quick replies without leaving INDEX
-- OAuth flow for real-time calendar event creation
+- OAuth flow for real-time calendar event creation (deployed mode)
 - Deeper thread context fetching for Slack
 - Status tracking (inbox → in progress → done)
+- Auto-refresh of realData.ts via scheduled MCP calls
 
 ### Longer-Term Vision
 - Claude-powered semantic routing for OmniBar
@@ -509,6 +630,7 @@ Each journey maps to the Top 10 Flows that demonstrate INDEX's promise.
 - Focus session timer with distraction blocking
 - Impact Mode: filter to only authoring actions (for performance reviews)
 - Team view: shared context across collaborators
+- Real-time sync without manual data refresh
 
 ---
 

@@ -14,7 +14,8 @@ export type ItemType =
   | 'note'
   | 'event'
   | 'artifact'
-  | 'reference';
+  | 'reference'
+  | 'message';
 
 export type TileSize = 'large' | 'medium' | 'small';
 

@@ -1,15 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { integrationRegistry } from '@/lib/integrations';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth/auth.config';
+import { fetchCalendarEvents, fetchDriveFiles } from '@/lib/services/google';
+import { fetchSlackMessages } from '@/lib/services/slack';
+import { prisma } from '@/lib/db/prisma';
 import { liveItems } from '@/lib/liveData';
+import { MindItem } from '@/lib/types';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}));
     const mode = body.mode || 'live';
-    const sources = body.sources || ['all'];
     
     if (mode === 'demo') {
-      // Return demo data
       return NextResponse.json({
         success: true,
         mode: 'demo',
@@ -17,44 +20,98 @@ export async function POST(request: NextRequest) {
         syncedAt: new Date().toISOString(),
       });
     }
+
+    // Live mode - requires authentication
+    const session = await getServerSession(authOptions);
     
-    // Live mode - fetch from integrations
-    const allItems = [];
+    if (!session?.user?.id) {
+      // Fall back to demo data for unauthenticated users
+      return NextResponse.json({
+        success: true,
+        mode: 'demo',
+        items: liveItems,
+        syncedAt: new Date().toISOString(),
+        message: 'Sign in to access your live data',
+      });
+    }
+
+    const userId = session.user.id;
+
+    // Log sync start
+    await prisma.syncLog.create({
+      data: {
+        userId,
+        provider: 'all',
+        status: 'started',
+      },
+    });
+
+    // Fetch from all connected integrations in parallel
     const results: Record<string, { count: number; error?: string }> = {};
     
-    const integrations = integrationRegistry.getAll();
-    
-    for (const integration of integrations) {
-      // Skip if not in requested sources
-      if (!sources.includes('all') && !sources.includes(integration.id)) {
-        continue;
-      }
-      
-      try {
-        const configured = await integration.isConfigured();
-        if (!configured) {
-          results[integration.id] = { count: 0, error: 'Not configured' };
-          continue;
+    const [calendarEvents, driveFiles, slackMessages] = await Promise.all([
+      fetchCalendarEvents(userId)
+        .then((items) => {
+          results.calendar = { count: items.length };
+          return items;
+        })
+        .catch((e) => {
+          results.calendar = { count: 0, error: e.message };
+          return [];
+        }),
+      fetchDriveFiles(userId)
+        .then((items) => {
+          results.drive = { count: items.length };
+          return items;
+        })
+        .catch((e) => {
+          results.drive = { count: 0, error: e.message };
+          return [];
+        }),
+      fetchSlackMessages(userId)
+        .then((items) => {
+          results.slack = { count: items.length };
+          return items;
+        })
+        .catch((e) => {
+          results.slack = { count: 0, error: e.message };
+          return [];
+        }),
+    ]);
+
+    const items: MindItem[] = [
+      ...calendarEvents,
+      ...driveFiles,
+      ...slackMessages,
+    ];
+
+    // Sort by time (calendar by start time, others by lastTouched)
+    items.sort((a, b) => {
+      const getTime = (item: MindItem) => {
+        if (item.source === 'calendar' && item.sourceMeta?.meta) {
+          const meta = item.sourceMeta.meta as { startsAt?: string };
+          if (meta.startsAt) return new Date(meta.startsAt).getTime();
         }
-        
-        if ('fetch' in integration && 'transform' in integration) {
-          const result = await integration.fetch('default', { limit: 50 });
-          const items = result.items.map(raw => integration.transform(raw, 'default'));
-          allItems.push(...items);
-          results[integration.id] = { count: items.length };
-        }
-      } catch (err) {
-        results[integration.id] = { 
-          count: 0, 
-          error: err instanceof Error ? err.message : 'Unknown error' 
-        };
-      }
-    }
-    
+        return new Date(item.lastTouchedAt || item.createdAt).getTime();
+      };
+      return getTime(b) - getTime(a);
+    });
+
+    // Log successful sync
+    await prisma.syncLog.create({
+      data: {
+        userId,
+        provider: 'all',
+        status: 'completed',
+        itemCount: items.length,
+        completedAt: new Date(),
+      },
+    });
+
     return NextResponse.json({
       success: true,
       mode: 'live',
-      items: allItems,
+      items,
       results,
       syncedAt: new Date().toISOString(),
     });
@@ -68,19 +125,57 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET() {
-  // Return sync status
-  try {
-    const statuses = await integrationRegistry.getAllStatus('default');
-    
+  const session = await getServerSession(authOptions);
+  
+  if (!session?.user?.id) {
     return NextResponse.json({
-      integrations: statuses,
-      lastSync: null, // Would come from database
+      authenticated: false,
+      integrations: {
+        google: { connected: false },
+        slack: { connected: false },
+      },
     });
-  } catch (error) {
-    console.error('Failed to get sync status:', error);
-    return NextResponse.json(
-      { error: 'Failed to get sync status' },
-      { status: 500 }
-    );
   }
+
+  const userId = session.user.id;
+
+  // Get connection status for each integration
+  const connections = await prisma.integrationConnection.findMany({
+    where: { userId },
+    select: {
+      provider: true,
+      lastSyncAt: true,
+      syncStatus: true,
+    },
+  });
+
+  const integrations: Record<string, { connected: boolean; lastSyncAt?: Date | null; status?: string }> = {
+    google: { connected: false },
+    slack: { connected: false },
+  };
+
+  for (const conn of connections) {
+    integrations[conn.provider] = {
+      connected: true,
+      lastSyncAt: conn.lastSyncAt,
+      status: conn.syncStatus,
+    };
+  }
+
+  // Get last sync log
+  const lastSync = await prisma.syncLog.findFirst({
+    where: { userId, status: 'completed' },
+    orderBy: { completedAt: 'desc' },
+  });
+
+  return NextResponse.json({
+    authenticated: true,
+    user: {
+      id: session.user.id,
+      email: session.user.email,
+      name: session.user.name,
+    },
+    integrations,
+    lastSync: lastSync?.completedAt,
+  });
 }

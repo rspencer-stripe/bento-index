@@ -37,6 +37,7 @@ import {
   CommitmentTracker,
   SchedulingModal,
   MeetingPrepPanel,
+  AlertBar,
 } from '@/components';
 import type { SchedulingRequest } from '@/components/OmniBar';
 import { mockItems } from '@/lib/mockData';
@@ -139,10 +140,6 @@ function getItemThumbnail(item: MindItem): string | null {
   }
 }
 
-const STORAGE_KEY = 'index-items';
-const STORAGE_VERSION_KEY = 'index-version';
-const CURRENT_VERSION = '21'; // Dynamic dates for live mode data
-
 const validViewModes: ViewMode[] = ['timeline', 'focus', 'meetings', 'projects', 'digest', 'commitments'];
 
 function HomeContent() {
@@ -159,7 +156,7 @@ function HomeContent() {
   const [schedulingModalOpen, setSchedulingModalOpen] = useState(false);
   const [schedulingRequest, setSchedulingRequest] = useState<SchedulingRequest | null>(null);
   const [dataMode, setDataModeState] = useState<DataMode>('demo');
-  const [integrationStatus, setIntegrationStatus] = useState<IntegrationStatus | null>(null);
+  const [_integrationStatus, setIntegrationStatus] = useState<IntegrationStatus | null>(null);
   const [isLoadingLiveData, setIsLoadingLiveData] = useState(false);
   const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set());
   const [meetingPrepOpen, setMeetingPrepOpen] = useState(false);
@@ -273,7 +270,7 @@ function HomeContent() {
   const commitments = useMemo(() => extractCommitments(items), [items]);
   const dailyDigest = useMemo(() => generateDailyDigest(items), [items]);
   const urgentAlerts = useMemo(() => getUrgentAlerts(items), [items]);
-  const staleNudges = useMemo(() => getStaleNudges(items), [items]);
+  const _staleNudges = useMemo(() => getStaleNudges(items), [items]);
   const waitingItems = useMemo(() => getWaitingItems(items), [items]);
 
   const overdueCount = commitments.filter(c => c.status === 'overdue').length;
@@ -553,6 +550,9 @@ function HomeContent() {
       setViewMode('commitments');
     } else if (alert.type === 'meeting_soon') {
       setViewMode('meetings');
+    } else if (alert.type === 'stale_high_priority') {
+      // Navigate to Focus view which shows next actions
+      setViewMode('focus');
     }
   }, [setViewMode]);
 
@@ -995,12 +995,12 @@ function HomeContent() {
 
       {/* Meeting prep is now in the header toolbar */}
 
-      {/* Alert Bar disabled - too visually loud */}
-      {/* <AlertBar
+      {/* Alert bar for stale items and urgent reminders */}
+      <AlertBar
         alerts={urgentAlerts.filter(a => !dismissedAlerts.has(a.id))}
         onDismiss={handleAlertDismiss}
         onNavigate={handleAlertNavigate}
-      /> */}
+      />
 
     </main>
   );

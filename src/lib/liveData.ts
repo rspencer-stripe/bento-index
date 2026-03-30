@@ -637,6 +637,7 @@ const upcomingMeetings: MindItem[] = [
 // COMBINE ALL ITEMS
 // ═══════════════════════════════════════════════════════════════════════════
 
+// Static export - timestamps are fixed at module load (for backward compat)
 export const liveItems: MindItem[] = [
   // Journey 1: Meeting Prep - Katie 1:1 with rich context
   ...upcomingMeetings,
@@ -661,6 +662,40 @@ export const liveItems: MindItem[] = [
   // Journey 8: Today's activity
   ...todayItems,
 ];
+
+// Dynamic export - refreshes all relative timestamps on each call
+export function getDemoItems(): MindItem[] {
+  // Update relative timestamps to current time
+  const refreshTimestamp = (item: MindItem): MindItem => {
+    // Deep clone the item
+    const updated = JSON.parse(JSON.stringify(item)) as MindItem;
+    
+    // Refresh lastTouchedAt based on the pattern in the original
+    if (item.source === 'calendar') {
+      // For calendar, keep the scheduled times but refresh lastTouched
+      updated.lastTouchedAt = hoursAgo(1);
+      
+      // For the imminent meeting, make it always 15-20 mins from now
+      if (item.id === 'cal-imminent-katie-1on1') {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const meta = updated.sourceMeta.meta as any;
+        meta.startsAt = minsFromNow(18);
+        meta.endsAt = minsFromNow(48);
+      }
+    } else {
+      // For non-calendar items, refresh based on priority
+      if (item.priority >= 4) {
+        updated.lastTouchedAt = hoursAgo(Math.floor(Math.random() * 4) + 1);
+      } else {
+        updated.lastTouchedAt = hoursAgo(Math.floor(Math.random() * 24) + 4);
+      }
+    }
+    
+    return updated;
+  };
+  
+  return liveItems.map(refreshTimestamp);
+}
 
 // Export helpers for meeting prep
 export function getAllCollaborators(items: MindItem[]): string[] {

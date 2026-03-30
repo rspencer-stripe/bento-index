@@ -40,7 +40,7 @@ import {
 } from '@/components';
 import type { SchedulingRequest } from '@/components/OmniBar';
 import { mockItems } from '@/lib/mockData';
-import { liveItems } from '@/lib/liveData';
+import { getDemoItems } from '@/lib/liveData';
 import { MindItem } from '@/lib/types';
 import { DataMode, getDataMode, setDataMode, fetchLiveItems, checkIntegrationStatus, IntegrationStatus } from '@/lib/dataProvider';
 import {
@@ -141,7 +141,7 @@ function getItemThumbnail(item: MindItem): string | null {
 
 const STORAGE_KEY = 'index-items';
 const STORAGE_VERSION_KEY = 'index-version';
-const CURRENT_VERSION = '20'; // Added Google Drive docs to live mode
+const CURRENT_VERSION = '21'; // Dynamic dates for live mode data
 
 const validViewModes: ViewMode[] = ['timeline', 'focus', 'meetings', 'projects', 'digest', 'commitments'];
 
@@ -186,25 +186,19 @@ function HomeContent() {
     checkIntegrationStatus().then(setIntegrationStatus);
   }, []);
 
-  // Load items based on data mode
+  // Load items based on data mode - always generate fresh data
   useEffect(() => {
     const loadData = async () => {
-      const storedVersion = localStorage.getItem(STORAGE_VERSION_KEY);
-      
       if (dataMode === 'demo') {
-        // Demo mode: use curated demo data
-        if (storedVersion !== CURRENT_VERSION) {
-          localStorage.removeItem(STORAGE_KEY);
-          localStorage.setItem(STORAGE_VERSION_KEY, CURRENT_VERSION);
-        }
-        // Demo mode: use liveItems + mockItems (excluding mock calendar events to keep Katie 1:1)
-        const combinedData = [...liveItems, ...mockItems.filter(m => 
-          m.source !== 'calendar' && !liveItems.some(l => l.title === m.title)
+        // Demo mode: use curated demo data with fresh timestamps
+        const demoData = getDemoItems();
+        const combinedData = [...demoData, ...mockItems.filter(m => 
+          m.source !== 'calendar' && !demoData.some(l => l.title === m.title)
         )];
         setItems(combinedData);
         setIsLoaded(true);
       } else {
-        // Live mode: fetch from real integrations
+        // Live mode: fetch fresh data from realData.ts
         setIsLoadingLiveData(true);
         try {
           const liveData = await fetchLiveItems();
@@ -212,16 +206,18 @@ function HomeContent() {
             setItems(liveData);
           } else {
             // Fallback to demo data if no live data available
-            const combinedData = [...liveItems, ...mockItems.filter(m => 
-              m.source !== 'calendar' && !liveItems.some(l => l.title === m.title)
+            const demoData = getDemoItems();
+            const combinedData = [...demoData, ...mockItems.filter(m => 
+              m.source !== 'calendar' && !demoData.some(l => l.title === m.title)
             )];
             setItems(combinedData);
           }
         } catch (error) {
           console.error('Failed to load live data:', error);
           // Fallback to demo data
-          const combinedData = [...liveItems, ...mockItems.filter(m => 
-            m.source !== 'calendar' && !liveItems.some(l => l.title === m.title)
+          const demoData = getDemoItems();
+          const combinedData = [...demoData, ...mockItems.filter(m => 
+            m.source !== 'calendar' && !demoData.some(l => l.title === m.title)
           )];
           setItems(combinedData);
         }
@@ -232,13 +228,6 @@ function HomeContent() {
     
     loadData();
   }, [dataMode]);
-
-  // Save items to localStorage when they change
-  useEffect(() => {
-    if (isLoaded && items.length > 0) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-    }
-  }, [items, isLoaded]);
 
   // Scroll to top when view mode changes
   useEffect(() => {

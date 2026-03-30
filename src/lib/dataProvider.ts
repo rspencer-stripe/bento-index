@@ -1,6 +1,6 @@
 import { MindItem } from './types';
-import { liveItems } from './liveData';
-import { realItems } from './realData';
+import { getDemoItems as getStaticDemoItems } from './liveData';
+import { getRealItems } from './realData';
 
 export type DataMode = 'demo' | 'live';
 
@@ -24,16 +24,15 @@ export function toggleDataMode(): DataMode {
   return next;
 }
 
-// Demo data - curated demo scenarios
+// Demo data - curated demo scenarios with fresh timestamps
 export function getDemoItems(): MindItem[] {
-  return liveItems;
+  return getStaticDemoItems();
 }
 
-// Live data - real data from MCP (refreshed periodically)
+// Live data - generates fresh timestamps on each call
 export async function fetchLiveItems(): Promise<MindItem[]> {
-  // Return real data fetched via MCP
-  // This data is updated when you run the agent to refresh it
-  return realItems;
+  // Generate fresh data with current timestamps
+  return getRealItems();
 }
 
 // Legacy individual fetch functions (still work for backward compatibility)
